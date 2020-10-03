@@ -2,7 +2,7 @@
 
 //import { OrbitControls } from './three/OrbitControls.js';
 
-var camera, controls, scene, renderer, pianoKeys;
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [];
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -55,7 +55,6 @@ function generatePiano(scene = undefined, opacity = 1) {
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x555555);
-    scene.fog = new THREE.FogExp2(0xcccccc, 0.005);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -114,11 +113,57 @@ function render() {
 
 }
 
+
+let colorNote_w = [0x42d4f5, 0xe33030];
+let colorNote_b = [0x10b5b2, 0xbf2828];
+let createBox = function (pianoKey, width, data) {
+    let color = colorNote_b[data.track % 2];
+    if (pianoKey.isWhite) 
+        color = colorNote_w[data.track % 2];
+    const velocity = data.velocity * 10;
+    const datatime = data.time * 10;
+    const geometry = new THREE.BoxGeometry(width, velocity, 1);
+    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1, side: THREE.DoubleSide });
+    const edges = new THREE.EdgesGeometry(geometry);
+    
+    let box = new THREE.Mesh(geometry, material);
+    let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+
+    box.position.y = datatime + velocity / 2;
+    box.position.x = pianoKey.box.position.x + 0.1;
+    line.position.y = datatime + velocity/ 2;
+    line.position.x = pianoKey.box.position.x + 0.1;
+    if (pianoKey.isWhite) {
+        box.position.z = 2;
+        line.position.z = 2;
+    }
+    scene.add(line)
+    scene.add(box)
+    futurBoxs.push(box);
+    futurBoxs.push(line);
+}
+
+let createFuturBox = function () {
+    for (data of mididata) {
+        if (data.msg.subtype == "noteOn") {
+            let n = data.msg.noteNumber - 21;
+            let width;
+            pianoKey = pianoKeys[n];
+            if (pianoKey.isWhite)
+                width = 0.8;
+            else
+                width = 0.4;
+            if (data.velocity <= 0.05) {
+                data.velocity = 0.05;
+            }
+            createBox(pianoKey, width, data);
+        }
+    }
+};
+
 let mididata = [];
 let addTimecode = function () {
-    mididata = [];
     let t = 0;
-    console.log(player)
     for (let data of player.data) {
         t += data[1];
         let newdata = {
@@ -226,6 +271,7 @@ eventjs.add(window, "load", function (event) {
             MIDI.setVolume(0, 20);
             player.loadFile(song[songid % song.length]);
             addTimecode();
+            createFuturBox();
             player.addListener(function (data) {
                 let pianoKey = data.note - 21;
                 console.log(pianoKeys[pianoKey]);
@@ -292,5 +338,3 @@ let MIDIPlayerPercentage = function (player) {
     });
     window.player = player;
 };
-
-var player;
