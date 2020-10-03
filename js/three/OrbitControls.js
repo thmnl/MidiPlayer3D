@@ -1,13 +1,10 @@
-import {
-	EventDispatcher,
-	MOUSE,
-	Quaternion,
-	Spherical,
-	TOUCH,
-	Vector2,
-	Vector3
-} from "./three.module.js";
-
+let EventDispatcher = THREE.EventDispatcher;
+let MOUSE = THREE.MOUSE;
+let Quaternion = THREE.Quaternion;
+let Spherical = THREE.Spherical;
+let TOUCH = THREE.TOUCH;
+let Vector2 = THREE.Vector2;
+let Vector3 = THREE.Vector3;
 // This set of controls performs orbiting, dollying (zooming), and panning.
 // Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
 //
@@ -1224,5 +1221,3 @@ var MapControls = function ( object, domElement ) {
 
 MapControls.prototype = Object.create( EventDispatcher.prototype );
 MapControls.prototype.constructor = MapControls;
-
-export { OrbitControls, MapControls };
