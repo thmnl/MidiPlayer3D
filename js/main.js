@@ -2,7 +2,7 @@
 
 //import { OrbitControls } from './three/OrbitControls.js';
 
-var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20;
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, pianistModel;
 
 init();
 //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -109,11 +109,11 @@ function init() {
     loader.setDRACOLoader(dracoLoader);
     loader.load('./js/model/Grand_Piano_test.glb', function (gltf) {
 
-        var model = gltf.scene;
+        let model = gltf.scene;
         model.position.set(43, -30 + pianoFloor, -3);
         model.scale.set(37, 37, 37);
 
-        scene.add(model);
+        //scene.add(model);
 
         animate();
 
@@ -122,6 +122,30 @@ function init() {
         console.error(e);
 
     });
+    //pianist model 
+    loader.load( './js/model/Xbot.glb', function ( gltf ) {
+
+        pianistModel = gltf.scene;
+        pianistModel.scale.set(30, 30, 30);
+        pianistModel.position.set(0, -15, 15);
+        pianistModel.rotation.set(0, 3.15, 0);
+        console.log(pianistModel)
+
+        scene.add( pianistModel );
+
+        pianistModel.traverse( function ( object ) {
+
+            if ( object.isMesh ) object.castShadow = true;
+
+        } );
+
+        skeleton = new THREE.SkeletonHelper( pianistModel );
+        skeleton.visible = true;
+        setBasicPosture();
+        scene.add( skeleton );
+        animate();
+
+    } );
 
     // lights
     var ambient = new THREE.AmbientLight(0xffffff, 1);
@@ -207,6 +231,25 @@ function animate() {
 
     render();
 
+}
+
+function setBasicPosture() {
+    pianistModel.getObjectByName( 'mixamorigLeftUpLeg' ).rotation.x = -1.4;
+    pianistModel.getObjectByName( 'mixamorigRightUpLeg' ).rotation.x = -1.4;
+    pianistModel.getObjectByName( 'mixamorigRightLeg' ).rotation.x = 1.4;
+    pianistModel.getObjectByName( 'mixamorigLeftLeg' ).rotation.x = 1.4;
+
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 1.3;
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 1.4;
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = -1.4;
+
+    pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.z = -1.3; // ^ upper 
+    pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.y = -1.4; // < - > 
+    pianistModel.getObjectByName( 'mixamorigLeftForeArm' ).rotation.z = 1.4; // lower 
+
+
+    pianistModel.getObjectByName( 'mixamorigLeftHandThumb1' ).rotation.z = +0.4;
+    pianistModel.getObjectByName( 'mixamorigRightHandThumb1' ).rotation.z = -0.4;
 }
 
 function render() {
