@@ -31,7 +31,6 @@ function generatePiano(scene = undefined, opacity = 1) {
             line.position.x = n - modificator;
             box.position.y = pianoFloor;
             line.position.y = pianoFloor;
-
         }
         else {
             box = new THREE.Mesh(blackGeometry, blackMaterial);
@@ -63,8 +62,8 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(0, 100, 100);
+    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 30000);
+    camera.position.set(-30, 100, 100);
 
     // controls
 
@@ -77,21 +76,22 @@ function init() {
 
     controls.screenSpacePanning = false;
 
-    controls.minDistance = 5;
+    controls.minDistance = 0;
     controls.maxDistance = 500;
 
     controls.maxPolarAngle = Math.PI / 2;
     // ground 
     var loader = new THREE.TextureLoader();
-    var groundTexture = loader.load('./images/ground.jpg');
+    var groundTexture = loader.load('./images/ground.png');
     groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(10, 10);
+    groundTexture.repeat.set(1, 1);
     groundTexture.anisotropy = 16;
+    groundTexture.opacity = 0.2;
     groundTexture.encoding = THREE.sRGBEncoding;
 
-    var groundMaterial = new THREE.MeshLambertMaterial({ map: groundTexture });
+    var groundMaterial = new THREE.MeshLambertMaterial({ map: groundTexture, transparent: true });
 
-    var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1000, 1000), groundMaterial);
+    var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500), groundMaterial);
     mesh.position.y = -10;
     mesh.rotation.x = - Math.PI / 2;
     mesh.receiveShadow = true;
@@ -125,24 +125,45 @@ function init() {
 
     // lights
     var ambient = new THREE.AmbientLight(0xffffff, 1);
-    var sphere = new THREE.SphereBufferGeometry(0.5, 16, 8);
-    let light1 = new THREE.PointLight(0xffffff, 150, 35);
+    let light1 = new THREE.PointLight(0xffffff, 150, 40);
     light1.position.set(0, 20, 20)
     scene.add(light1);
 
-    let light2 = new THREE.PointLight(0xffffff, 2, 150);
+    let light2 = new THREE.PointLight(0xffffff, 1.5, 150);
     light2.position.set(35, 25, -70)
     scene.add(light2);
 
-    let light3 = new THREE.PointLight(0xffffff, 2, 150);
+    let light3 = new THREE.PointLight(0xffffff, 1.5, 150);
     light3.position.set(-55, 25, -60)
     scene.add(light3);
 
-    let light4 = new THREE.PointLight(0xffffff, 2, 150);
+    let light4 = new THREE.PointLight(0xffffff, 1.5, 150);
     light4.position.set(0, 45, -150)
     scene.add(light4);
     scene.add(ambient);
+    // skybox
+    let materialArray = [];
+    let texture_ft = new THREE.TextureLoader().load('../images/corona_ft.png');
+    let texture_bk = new THREE.TextureLoader().load('../images/corona_bk.png');
+    let texture_up = new THREE.TextureLoader().load('../images/corona_up.png');
+    let texture_dn = new THREE.TextureLoader().load('../images/corona_dn.png');
+    let texture_rt = new THREE.TextureLoader().load('../images/corona_rt.png');
+    let texture_lf = new THREE.TextureLoader().load('../images/corona_lf.png');
 
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_ft }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_bk }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_up }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_dn }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_rt }));
+    materialArray.push(new THREE.MeshBasicMaterial({ map: texture_lf }));
+
+    for (let i = 0; i < 6; i++)
+        materialArray[i].side = THREE.BackSide;
+
+    let skyboxGeo = new THREE.BoxGeometry(5000, 5000, 5000);
+    let skybox = new THREE.Mesh(skyboxGeo, materialArray);
+    scene.add(skybox);
+    animate();
 
 
 
@@ -151,7 +172,7 @@ function init() {
 }
 
 function onWindowResize() {
-
+    camera.quaternion._x = 0
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
@@ -211,9 +232,9 @@ let createBox = function (pianoKey, width, data) {
     let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
 
     box.position.y = datatime + velocity / 2;
-    box.position.x = pianoKey.box.position.x + 0.1;
+    box.position.x = pianoKey.box.position.x;
     line.position.y = datatime + velocity / 2;
-    line.position.x = pianoKey.box.position.x + 0.1;
+    line.position.x = pianoKey.box.position.x;
     if (pianoKey.isWhite) {
         box.position.z = 2;
         line.position.z = 2;
