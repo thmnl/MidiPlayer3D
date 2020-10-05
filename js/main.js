@@ -13,10 +13,10 @@ function generatePiano(scene = undefined, opacity = 1) {
     const piano_patern = [true, false, true, true, false, true, false, true, true, false, true, false];
 
     const whiteGeometry = new THREE.BoxGeometry(1, 1, 6);
-    const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: opacity, side: THREE.DoubleSide });
+    const whiteMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: opacity, side: THREE.DoubleSide });
     const whiteEdges = new THREE.EdgesGeometry(whiteGeometry);
     const blackGeometry = new THREE.BoxGeometry(0.6, 1, 4);
-    const blackMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: opacity, side: THREE.DoubleSide });
+    const blackMaterial = new THREE.MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: opacity, side: THREE.DoubleSide });
     const blackEdges = new THREE.EdgesGeometry(blackGeometry);
 
     let modificator = 25;
@@ -34,7 +34,7 @@ function generatePiano(scene = undefined, opacity = 1) {
         }
         else {
             box = new THREE.Mesh(blackGeometry, blackMaterial);
-            color = 0x666666;
+            color = 0x0000005;
             line = new THREE.LineSegments(blackEdges, new THREE.LineBasicMaterial({ color: color }));
             box.position.x = n - modificator - 0.5;
             box.position.y = 0.4 + pianoFloor;
@@ -126,8 +126,8 @@ function init() {
     loader.load( './js/model/Xbot.glb', function ( gltf ) {
 
         pianistModel = gltf.scene;
-        pianistModel.scale.set(30, 30, 30);
-        pianistModel.position.set(0, -15, 15);
+        pianistModel.scale.set(35, 35, 35);
+        pianistModel.position.set(0, -20, 16);
         pianistModel.rotation.set(0, 3.15, 0);
         console.log(pianistModel)
 
@@ -139,7 +139,7 @@ function init() {
 
         } );
 
-        skeleton = new THREE.SkeletonHelper( pianistModel );
+        skeleton = new THREE.SkeletonHelper(  pianistModel );
         skeleton.visible = true;
         setBasicPosture();
         scene.add( skeleton );
@@ -208,7 +208,7 @@ let t1 = Date.now();
 let previouscurrentTime = -1;
 let currentTime;
 function animate() {
-
+  
     requestAnimationFrame(animate);
 
     if (player != undefined) {
@@ -236,20 +236,37 @@ function animate() {
 function setBasicPosture() {
     pianistModel.getObjectByName( 'mixamorigLeftUpLeg' ).rotation.x = -1.4;
     pianistModel.getObjectByName( 'mixamorigRightUpLeg' ).rotation.x = -1.4;
-    pianistModel.getObjectByName( 'mixamorigRightLeg' ).rotation.x = 1.4;
+    pianistModel.getObjectByName( 'mixamorigRightLeg' ).rotation.x = 1.3;
     pianistModel.getObjectByName( 'mixamorigLeftLeg' ).rotation.x = 1.4;
+    pianistModel.getObjectByName( 'mixamorigSpine2' ).rotation.x = 0.4;
+    pianistModel.getObjectByName( 'mixamorigLeftLeg' ).rotation.x = 1.4;
+    pianistModel.getObjectByName( 'mixamorigRightFoot' ).rotation.x = -0.3;
+    pianistModel.getObjectByName( 'mixamorigLeftHandThumb1' ).rotation.z = +0.4;
+    pianistModel.getObjectByName( 'mixamorigRightHandThumb1' ).rotation.z = -0.4;
 
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 1.3;
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 1.4;
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = -1.4;
+    
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.x = 0; // ^ upper 
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 0.95; // < - > 
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 1.1; // ^ upper 
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.x = 0; 
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.y = 0.85; // lower left rigt
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = -1.35; // lower up down
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.x= 0.5; 
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.y= 0.4;
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.z= -0.1;
 
     pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.z = -1.3; // ^ upper 
     pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.y = -1.4; // < - > 
-    pianistModel.getObjectByName( 'mixamorigLeftForeArm' ).rotation.z = 1.4; // lower 
+    pianistModel.getObjectByName( 'mixamorigLeftForeArm' ).rotation.z = 1.7; // lower 
+}
 
-
-    pianistModel.getObjectByName( 'mixamorigLeftHandThumb1' ).rotation.z = +0.4;
-    pianistModel.getObjectByName( 'mixamorigRightHandThumb1' ).rotation.z = -0.4;
+function setHandById(id) {
+    let posture = pianistPositionRight[id];
+    for (const [key, value] of Object.entries(posture)) {
+        pianistModel.getObjectByName(key).rotation.x = value.x;
+        pianistModel.getObjectByName(key).rotation.y = value.y;
+        pianistModel.getObjectByName(key).rotation.z = value.z;
+    }
 }
 
 function render() {
