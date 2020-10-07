@@ -1,62 +1,67 @@
-let	AnimationClip = THREE.AnimationClip,
-Bone = THREE.Bone,
-Box3 = THREE.Box3,
-BufferAttribute = THREE.BufferAttribute,
-BufferGeometry = THREE.BufferGeometry,
-CanvasTexture = THREE.CanvasTexture,
-ClampToEdgeWrapping = THREE.ClampToEdgeWrapping,
-DirectionalLight = THREE.DirectionalLight,
-DoubleSide = THREE.DoubleSide,
-FileLoader = THREE.FileLoader,
-FrontSide = THREE.FrontSide,
-Group = THREE.Group,
-ImageBitmapLoader = THREE.ImageBitmapLoader,
-InterleavedBuffer = THREE.InterleavedBuffer,
-InterleavedBufferAttribute = THREE.InterleavedBufferAttribute,
-Interpolant = THREE.Interpolant,
-InterpolateDiscrete = THREE.InterpolateDiscrete,
-InterpolateLinear = THREE.InterpolateLinear,
-Line = THREE.Line,
-LineBasicMaterial = THREE.LineBasicMaterial,
-LineLoop = THREE.LineLoop,
-LineSegments = THREE.LineSegments,
-LinearFilter = THREE.LinearFilter,
-LinearMipmapLinearFilter = THREE.LinearMipmapLinearFilter,
-LinearMipmapNearestFilter = THREE.LinearMipmapNearestFilter,
-Loader = THREE.Loader,
-LoaderUtils = THREE.LoaderUtils,
-Material = THREE.Material,
-MathUtils = THREE.MathUtils,
-Matrix4 = THREE.Matrix4,
-Mesh = THREE.Mesh,
-MeshBasicMaterial = THREE.MeshBasicMaterial,
-MeshPhysicalMaterial = THREE.MeshPhysicalMaterial,
-MeshStandardMaterial = THREE.MeshStandardMaterial,
-MirroredRepeatWrapping = THREE.MirroredRepeatWrapping,
-NearestFilter = THREE.NearestFilter,
-NearestMipmapLinearFilter = THREE.NearestMipmapLinearFilter,
-NearestMipmapNearestFilter = THREE.NearestMipmapNearestFilter,
-NumberKeyframeTrack = THREE.NumberKeyframeTrack,
-Object3D = THREE.Object3D,
-OrthographicCamera = THREE.OrthographicCamera,
-PerspectiveCamera = THREE.PerspectiveCamera,
-PointLight = THREE.PointLight,
-Points = THREE.Points,
-PointsMaterial = THREE.PointsMaterial,
-PropertyBinding = THREE.PropertyBinding,
-QuaternionKeyframeTrack = THREE.QuaternionKeyframeTrack,
-RGBFormat = THREE.RGBFormat,
-RepeatWrapping = THREE.RepeatWrapping,
-Skeleton = THREE.Skeleton,
-SkinnedMesh = THREE.SkinnedMesh,
-Sphere = THREE.Sphere,
-SpotLight = THREE.SpotLight,
-TangentSpaceNormalMap = THREE.TangentSpaceNormalMap,
-TextureLoader = THREE.TextureLoader,
-TriangleFanDrawMode = THREE.TriangleFanDrawMode,
-TriangleStripDrawMode = THREE.TriangleStripDrawMode,
-VectorKeyframeTrack = THREE.VectorKeyframeTrack,
-sRGBEncoding = THREE.sRGBEncoding;
+import {
+	AnimationClip,
+	Bone,
+	Box3,
+	BufferAttribute,
+	BufferGeometry,
+	CanvasTexture,
+	ClampToEdgeWrapping,
+	Color,
+	DirectionalLight,
+	DoubleSide,
+	FileLoader,
+	FrontSide,
+	Group,
+	ImageBitmapLoader,
+	InterleavedBuffer,
+	InterleavedBufferAttribute,
+	Interpolant,
+	InterpolateDiscrete,
+	InterpolateLinear,
+	Line,
+	LineBasicMaterial,
+	LineLoop,
+	LineSegments,
+	LinearFilter,
+	LinearMipmapLinearFilter,
+	LinearMipmapNearestFilter,
+	Loader,
+	LoaderUtils,
+	Material,
+	MathUtils,
+	Matrix4,
+	Mesh,
+	MeshBasicMaterial,
+	MeshPhysicalMaterial,
+	MeshStandardMaterial,
+	MirroredRepeatWrapping,
+	NearestFilter,
+	NearestMipmapLinearFilter,
+	NearestMipmapNearestFilter,
+	NumberKeyframeTrack,
+	Object3D,
+	OrthographicCamera,
+	PerspectiveCamera,
+	PointLight,
+	Points,
+	PointsMaterial,
+	PropertyBinding,
+	QuaternionKeyframeTrack,
+	RGBFormat,
+	RepeatWrapping,
+	Skeleton,
+	SkinnedMesh,
+	Sphere,
+	SpotLight,
+	TangentSpaceNormalMap,
+	TextureLoader,
+	TriangleFanDrawMode,
+	TriangleStripDrawMode,
+	Vector2,
+	Vector3,
+	VectorKeyframeTrack,
+	sRGBEncoding
+} from "../three.module.js";
 
 var GLTFLoader = ( function () {
 
@@ -464,7 +469,7 @@ var GLTFLoader = ( function () {
 		var lightDef = lightDefs[ lightIndex ];
 		var lightNode;
 
-		var color = new THREE.Color( 0xffffff );
+		var color = new Color( 0xffffff );
 
 		if ( lightDef.color !== undefined ) color.fromArray( lightDef.color );
 
@@ -559,7 +564,7 @@ var GLTFLoader = ( function () {
 
 		var pending = [];
 
-		materialParams.color = new THREE.Color( 1.0, 1.0, 1.0 );
+		materialParams.color = new Color( 1.0, 1.0, 1.0 );
 		materialParams.opacity = 1.0;
 
 		var metallicRoughness = materialDef.pbrMetallicRoughness;
@@ -1014,7 +1019,7 @@ var GLTFLoader = ( function () {
 		].join( '\n' );
 
 		var uniforms = {
-			specular: { value: new THREE.Color().setHex( 0xffffff ) },
+			specular: { value: new Color().setHex( 0xffffff ) },
 			glossiness: { value: 1 },
 			specularMap: { value: null },
 			glossinessMap: { value: null }
@@ -1189,7 +1194,7 @@ var GLTFLoader = ( function () {
 
 				var pbrSpecularGlossiness = materialDef.extensions[ this.name ];
 
-				materialParams.color = new THREE.Color( 1.0, 1.0, 1.0 );
+				materialParams.color = new Color( 1.0, 1.0, 1.0 );
 				materialParams.opacity = 1.0;
 
 				var pending = [];
@@ -1209,9 +1214,9 @@ var GLTFLoader = ( function () {
 
 				}
 
-				materialParams.emissive = new THREE.Color( 0.0, 0.0, 0.0 );
+				materialParams.emissive = new Color( 0.0, 0.0, 0.0 );
 				materialParams.glossiness = pbrSpecularGlossiness.glossinessFactor !== undefined ? pbrSpecularGlossiness.glossinessFactor : 1.0;
-				materialParams.specular = new THREE.Color( 1.0, 1.0, 1.0 );
+				materialParams.specular = new Color( 1.0, 1.0, 1.0 );
 
 				if ( Array.isArray( pbrSpecularGlossiness.specularFactor ) ) {
 
@@ -2596,7 +2601,7 @@ var GLTFLoader = ( function () {
 
 			var metallicRoughness = materialDef.pbrMetallicRoughness || {};
 
-			materialParams.color = new THREE.Color( 1.0, 1.0, 1.0 );
+			materialParams.color = new Color( 1.0, 1.0, 1.0 );
 			materialParams.opacity = 1.0;
 
 			if ( Array.isArray( metallicRoughness.baseColorFactor ) ) {
@@ -2693,7 +2698,7 @@ var GLTFLoader = ( function () {
 
 		if ( materialDef.emissiveFactor !== undefined && materialType !== MeshBasicMaterial ) {
 
-			materialParams.emissive = new THREE.Color().fromArray( materialDef.emissiveFactor );
+			materialParams.emissive = new Color().fromArray( materialDef.emissiveFactor );
 
 		}
 
@@ -3760,3 +3765,4 @@ var GLTFLoader = ( function () {
 
 } )();
 
+export { GLTFLoader };

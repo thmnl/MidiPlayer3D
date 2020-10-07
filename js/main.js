@@ -1,6 +1,8 @@
-//import * as THREE from './three/three.module.js';
-
-//import { OrbitControls } from './three/OrbitControls.js';
+import * as THREE from './three/three.module.js';
+import { OrbitControls } from './three/OrbitControls.js';
+import { GUI } from './three/dat.gui.module.js';
+import { GLTFLoader } from './three/loaders/GLTFLoader.js';
+import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, pianistModel;
 
@@ -89,7 +91,7 @@ function init() {
     groundTexture.opacity = 0.2;
     groundTexture.encoding = THREE.sRGBEncoding;
 
-    var groundMaterial = new THREE.MeshLambertMaterial({ map: groundTexture, transparent: true });
+    var groundMaterial = new THREE.MeshPhongMaterial({ map: groundTexture, transparent: true });
 
     var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500), groundMaterial);
     mesh.position.y = -10;
@@ -113,7 +115,7 @@ function init() {
         model.position.set(43, -30 + pianoFloor, -3);
         model.scale.set(37, 37, 37);
 
-        //scene.add(model);
+        scene.add(model);
 
         animate();
 
@@ -139,10 +141,10 @@ function init() {
 
         } );
 
-        skeleton = new THREE.SkeletonHelper(  pianistModel );
+        let skeleton = new THREE.SkeletonHelper(  pianistModel );
         skeleton.visible = true;
         setBasicPosture();
-        scene.add( skeleton );
+        //scene.add( skeleton );
         animate();
 
     } );
@@ -188,8 +190,6 @@ function init() {
     let skybox = new THREE.Mesh(skyboxGeo, materialArray);
     scene.add(skybox);
     animate();
-
-
 
     window.addEventListener('resize', onWindowResize, true);
 
@@ -244,28 +244,33 @@ function setBasicPosture() {
     pianistModel.getObjectByName( 'mixamorigLeftHandThumb1' ).rotation.z = +0.4;
     pianistModel.getObjectByName( 'mixamorigRightHandThumb1' ).rotation.z = -0.4;
 
-    
     pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.x = 0; // ^ upper 
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 0.95; // < - > 
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 1.1; // ^ upper 
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 0.8; // < - > // *-1
+    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 0.55; // ^ upper // *-1
     pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.x = 0; 
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.y = 0.85; // lower left rigt
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = -1.35; // lower up down
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.x= 0.5; 
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.y= 0.4;
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.z= -0.1;
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.y = 1; // lower left rigt
+    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = 1; // lower up down // *-1
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.x= -0.4; //
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.y= 0.4; //*-1
+    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.z= 0.1; //*-1
 
-    pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.z = -1.3; // ^ upper 
-    pianistModel.getObjectByName( 'mixamorigLeftArm' ).rotation.y = -1.4; // < - > 
-    pianistModel.getObjectByName( 'mixamorigLeftForeArm' ).rotation.z = 1.7; // lower 
+    setHandById(0, 1);
+    setHandById(87, 0);
 }
 
-function setHandById(id) {
-    let posture = pianistPositionRight[id];
+function setHandById(id, track) {
+    let modificator =  track == 0 ? 1 : -1;
+    id = track == 0 ? (id - 88) * -1 : id + 2;
+    let position =  track == 0 ? "Right" : "Left";
+    if (id > pianistPosition.length - 1)
+        return ;
+    let posture = pianistPosition[id];
+
     for (const [key, value] of Object.entries(posture)) {
-        pianistModel.getObjectByName(key).rotation.x = value.x;
-        pianistModel.getObjectByName(key).rotation.y = value.y;
-        pianistModel.getObjectByName(key).rotation.z = value.z;
+        const modifiedKey = key.replace("Position", position);
+        pianistModel.getObjectByName(modifiedKey).rotation.x = value.x;
+        pianistModel.getObjectByName(modifiedKey).rotation.y = value.y * modificator;
+        pianistModel.getObjectByName(modifiedKey).rotation.z = value.z * modificator;
     }
 }
 
@@ -307,16 +312,16 @@ let createBox = function (pianoKey, width, data) {
 
 let createFuturBox = function () {
     //clear box
-    for (box of futurBoxs) {
+    for (const box of futurBoxs) {
         scene.remove(box.box);
         scene.remove(box.line);
     }
     futurBoxs = [];
-    for (data of mididata) {
+    for (let data of mididata) {
         if (data.msg.subtype == "noteOn") {
             let n = data.msg.noteNumber - 21;
             let width;
-            pianoKey = pianoKeys[n];
+            let pianoKey = pianoKeys[n];
             if (pianoKey.isWhite)
                 width = 0.8;
             else
@@ -328,6 +333,26 @@ let createFuturBox = function () {
         }
     }
 };
+
+let createGui = function () {
+
+    let panel = new GUI( { width: 310 } );
+    let folder1 = panel.addFolder( 'Player' );
+    let folder2 = panel.addFolder( 'Models' );
+
+
+    let settings = {
+        'Volume': 20,
+        'Pause/Play': pausePlayStop,
+        'Next Song': () => player.getNextSong(+1),
+        'Previous Song': () => player.getNextSong(-1),
+
+    }
+    folder1.add(settings, "Volume", 0, 100, 1).onChange(SetVolume);
+    folder1.add(settings, "Pause/Play");
+    folder1.add(settings, "Next Song");
+    folder1.add(settings, "Previous Song");
+}
 
 let mididata;
 let addTimecode = function () {
@@ -363,12 +388,15 @@ function SetVolume(value) {
         MIDI.Player.resume();
     }
 }
+
 function dragOverHandler(ev) {
     ev.preventDefault();
 }
+
 function dropHandler(ev) {
     ev.preventDefault();
 
+    let place;
     let file = ev.dataTransfer.files[0],
         reader = new FileReader();
     name = file.name.replace(".mid", " ");
@@ -389,20 +417,19 @@ function dropHandler(ev) {
     };
     reader.readAsDataURL(file);
 }
+
 let pausePlayStop = function (stop) {
-    let d = document.getElementById("pausePlayStop");
     if (stop) {
         MIDI.Player.stop();
-        d.src = static_url + 'images/play.png';
     } else if (MIDI.Player.playing) {
-        d.src = static_url + 'images/play.png';
         MIDI.Player.pause(true);
     } else {
-        d.src = static_url + 'images/pause.png';
         MIDI.Player.resume();
     }
-    d.blur();
 }
+
+document.getElementById("body").addEventListener("drop", dropHandler);
+document.getElementById("body").addEventListener("dragover", dragOverHandler);
 document.addEventListener('keydown', function (event) {
     if (event.code == "Space") {
         pausePlayStop();
@@ -439,12 +466,14 @@ eventjs.add(window, "load", function (event) {
         onsuccess: function () {
             player = MIDI.Player;
             MIDI.setVolume(0, 20);
+            createGui();
             player.loadFile(song[songid % song.length]);
             addTimecode();
             player.addListener(function (data) {
                 let pianoKey = data.note - 21;
                 if (data.message === 144) {
                     setKey(pianoKey, true);
+                    setHandById(pianoKey, data.track);
                 }
                 else {
                     setKey(pianoKey, false);
