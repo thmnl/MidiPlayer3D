@@ -1,10 +1,3 @@
-body {
-      width: 100vw;
-      height: 100vh;
-      margin: 0;
-      overflow: hidden;
-}
-
 div.player {
 	padding: 5px 5px;
 	border: 1px solid #000;
@@ -63,5 +56,68 @@ div.player div.time-controls {
     float: left;
     width: 100%;
     position: relative;
+}
+
+a {
+    color: #f00;
+}
+.ac {  /* prevent dat-gui from being selected */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.no-pointer-events {
+    pointer-events: none;
+}
+.control-disabled {
+    color: #888;
+    text-decoration: line-through;
+}
+body {
+	margin: 0;
+	background-color: #000;
+	color: #fff;
+	font-family: Monospace;
+	font-size: 13px;
+	line-height: 24px;
+	overscroll-behavior: none;
+}
+
+a {
+	color: #fff;
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+button {
+	cursor: pointer;
+	text-transform: uppercase;
+}
+
+canvas {
+	display: block;
+}
+
+#info {
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	padding: 10px;
+	box-sizing: border-box;
+	text-align: center;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	z-index: 1; /* TODO Solve this in HTML */
+}
+
+a, select {
+	pointer-events: auto;
 }
 

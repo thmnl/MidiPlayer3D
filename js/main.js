@@ -8,7 +8,7 @@ import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, stats;
 var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
-var t1 = Date.now(), previouscurrentTime = -1, currentTime;
+var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -110,7 +110,7 @@ function init() {
 
     loader.setDRACOLoader(dracoLoader);
     loader.load('./js/model/Grand_Piano_test.glb', function (gltf) {
-
+        document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
         pianoModel.position.set(43, -30 + pianoFloor, -3);
         pianoModel.scale.set(37, 37, 37);
@@ -120,7 +120,9 @@ function init() {
         pianoFolder.add(settings, 'Show piano model').onChange(showPiano);
         animate();
 
-    }, undefined, function (e) {
+    }, function ( xhr ) {
+		document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + ( xhr.loaded / xhr.total * 100 ).toFixed(0) + "%";
+	}, function (e) {
 
         console.error(e);
 
@@ -132,7 +134,6 @@ function init() {
         pianistModel.scale.set(35, 35, 35);
         pianistModel.position.set(0, -20, 16);
         pianistModel.rotation.set(0, 3.15, 0);
-        console.log(pianistModel)
 
         scene.add(pianistModel);
 
@@ -146,9 +147,11 @@ function init() {
         skeleton.visible = false;
         setBasicPosture();
         scene.add(skeleton);
+        //panel 
         let pianistFolder = panel.addFolder('Pianist Model');
         pianistFolder.add(settings, 'Show model').onChange(showPianist);
         pianistFolder.add(settings, 'Show skeleton').onChange(showSkeleton);
+
         animate();
 
     });
@@ -156,34 +159,32 @@ function init() {
     // lights
     let textureLoader = new THREE.TextureLoader();
 
-    let textureFlare0 = textureLoader.load( '../images/lensflare0.png' );
-    let ambient = new THREE.AmbientLight(0xffffff, 1);
-    light1 = addLight(305.73, 100, 69.8, 0, 20, 20);
+    let textureFlare0 = textureLoader.load('../images/lensflare0.png');
+    let ambient = new THREE.AmbientLight(0xffffff, 0.5);
+    light1 = addLight(305.73, 100, 69.8);
     scene.add(light1);
 
-    light2 = addLight(205, 92, 59, 35, 25, -70);
+    light2 = addLight(205, 92, 59);
     scene.add(light2);
 
-    light3 = addLight(305.73, 100, 69.8, -55, 25, -60);
+    light3 = addLight(305.73, 100, 69.8);
     scene.add(light3);
 
-    light4 = addLight(205, 92, 59, 0, 45, -150);
+    light4 = addLight(205, 92, 59);
     scene.add(light4);
     scene.add(ambient);
-    
-    function addLight( h, s, l, x, y, z ) {
 
-        let light = new THREE.PointLight( 0xffffff, 5, 150 );
-        light.color.setHSL( h / 360, s / 100, l / 100);
-        light.position.set( x, y, z ); 
-        scene.add( light );
+    function addLight(h, s, l) {
+
+        let light = new THREE.PointLight(0xffffff, 5, 150);
+        light.color.setHSL(h / 360, s / 100, l / 100);
 
         var lensflare = new Lensflare();
-        lensflare.addElement( new LensflareElement( textureFlare0, 60, 0, light.color ) );
+        lensflare.addElement(new LensflareElement(textureFlare0, 60, 0, light.color));
 
-        light.add( lensflare );
+        light.add(lensflare);
         return light;
-    } 
+    }
 
     // skybox
     let materialArray = [];
@@ -210,7 +211,7 @@ function init() {
 
     //stats
     stats = new Stats();
-    document.body.appendChild( stats.dom );
+    document.body.appendChild(stats.dom);
 
     animate();
 
@@ -250,14 +251,14 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 0.8; // < - > // *-1
     pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.55; // ^ upper // *-1
     pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1; // lower left rigt
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1; // lower left rigt // *-1
     pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 1; // lower up down // *-1
     pianistModel.getObjectByName('mixamorigRightHand').rotation.x = -0.4; //
     pianistModel.getObjectByName('mixamorigRightHand').rotation.y = 0.4; //*-1
     pianistModel.getObjectByName('mixamorigRightHand').rotation.z = 0.1; //*-1
 
-    setHandById(0, 1);
-    setHandById(87, 0);
+    setHandById(40, 1);
+    setHandById(50, 0);
 }
 
 function setHandById(id, track) {
@@ -277,23 +278,23 @@ function setHandById(id, track) {
 }
 
 function render() {
-    let time = Date.now() * 0.0005;
+    let t = clock.getElapsedTime();
 
-    light1.position.x = Math.sin( time * 0.7 ) * 30;
-    light1.position.y = Math.cos( time * 0.5 ) * 40;
-    //light1.position.z = Math.cos( time * 0.3 ) * 30;
+    light1.position.x = Math.sin( t * 0.7 ) * 30;
+    light1.position.y = Math.cos( t * 0.5 ) * 40;
+    light1.position.z = Math.cos( t * 0.3 ) * 30;
 
-    light2.position.x = Math.cos( time * 0.3 ) * 30;
-    light2.position.y = Math.sin( time * 0.5 ) * 40;
-    light2.position.z = Math.sin( time * 0.7 ) * 30;
+    light2.position.x = Math.cos( t * 0.3 ) * 30;
+    light2.position.y = Math.sin( t * 0.5 ) * 40;
+    light2.position.z = Math.sin( t * 0.7 ) * 30;
 
-    light3.position.x = Math.sin( time * 0.7 ) * 30;
-    light3.position.y = Math.cos( time * 0.3 ) * 40;
-    light3.position.z = Math.sin( time * 0.5 ) * 30;
+    light3.position.x = Math.sin( t * 0.7 ) * 30;
+    light3.position.y = Math.cos( t * 0.3 ) * 40;
+    light3.position.z = Math.sin( t * 0.5 ) * 30;
 
-    light4.position.x = Math.sin( time * 0.3 ) * 30;
-    light4.position.y = Math.cos( time * 0.7 ) * 40;
-    light4.position.z = Math.sin( time * 0.5 ) * 30;
+    light4.position.x = Math.sin( t * 0.3 ) * 30;
+    light4.position.y = Math.cos( t * 0.7 ) * 40;
+    light4.position.z = Math.sin( t * 0.5 ) * 30;
 
     if (player != undefined) {
         currentTime = player.currentTime;
@@ -310,6 +311,14 @@ function render() {
     for (let box of futurBoxs) {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
+        if (box.box.position.y < pianoFloor ) {
+            box.box.visible = false
+            box.line.visible = false
+        }
+        if (box.box.position.y > pianoFloor ) {
+            box.box.visible = settings["Show notes"];
+            box.line.visible = settings["Show notes"];
+        }
     }
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     stats.update();
@@ -326,13 +335,15 @@ let createBox = function (pianoKey, width, data) {
         color = colorNote_w[data.track % 2];
     const velocity = data.velocity * 10;
     const datatime = data.time * 10;
-    const geometry = new THREE.BoxGeometry(width, velocity, 1);
-    const material = new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: 1, side: THREE.DoubleSide });
+    const geometry = new THREE.BoxGeometry(width, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1, side: THREE.DoubleSide });
     const edges = new THREE.EdgesGeometry(geometry);
 
     let box = new THREE.Mesh(geometry, material);
     let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
 
+    box.scale.y = velocity;
+    line.scale.y = velocity;
     box.position.y = datatime + velocity / 2;
     box.position.x = pianoKey.box.position.x;
     line.position.y = datatime + velocity / 2;
@@ -344,7 +355,7 @@ let createBox = function (pianoKey, width, data) {
     box.castShadow = true;
     scene.add(line)
     scene.add(box)
-    futurBoxs.push({ box: box, line: line, baseY: datatime + velocity / 2 + pianoFloor });
+    futurBoxs.push({ box: box, line: line, baseY: datatime + velocity / 2 + pianoFloor, velocity: velocity });
 }
 
 let createFuturBox = function () {
