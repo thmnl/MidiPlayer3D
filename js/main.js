@@ -4,11 +4,10 @@ import { GUI } from './three/dat.gui.module.js';
 import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 
-var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, pianistModel;
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20
+var pianistModel, skeleton, pianoModel, panel, settings;
 
-init();
-//render(); // remove when using next line for animation loop (requestAnimationFrame)
-animate();
+
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -111,12 +110,13 @@ function init() {
     loader.setDRACOLoader(dracoLoader);
     loader.load('./js/model/Grand_Piano_test.glb', function (gltf) {
 
-        let model = gltf.scene;
-        model.position.set(43, -30 + pianoFloor, -3);
-        model.scale.set(37, 37, 37);
+        pianoModel = gltf.scene;
+        pianoModel.position.set(43, -30 + pianoFloor, -3);
+        pianoModel.scale.set(37, 37, 37);
 
-        scene.add(model);
-
+        scene.add(pianoModel);
+        let pianoFolder = panel.addFolder('Piano Model');
+        pianoFolder.add(settings, 'Show piano model').onChange(showPiano);
         animate();
 
     }, undefined, function (e) {
@@ -125,7 +125,7 @@ function init() {
 
     });
     //pianist model 
-    loader.load( './js/model/Xbot.glb', function ( gltf ) {
+    loader.load('./js/model/Xbot.glb', function (gltf) {
 
         pianistModel = gltf.scene;
         pianistModel.scale.set(35, 35, 35);
@@ -133,21 +133,24 @@ function init() {
         pianistModel.rotation.set(0, 3.15, 0);
         console.log(pianistModel)
 
-        scene.add( pianistModel );
+        scene.add(pianistModel);
 
-        pianistModel.traverse( function ( object ) {
+        pianistModel.traverse(function (object) {
 
-            if ( object.isMesh ) object.castShadow = true;
+            if (object.isMesh) object.castShadow = true;
 
-        } );
+        });
 
-        let skeleton = new THREE.SkeletonHelper(  pianistModel );
-        skeleton.visible = true;
+        skeleton = new THREE.SkeletonHelper(pianistModel);
+        skeleton.visible = false;
         setBasicPosture();
-        //scene.add( skeleton );
+        scene.add(skeleton);
+        let pianistFolder = panel.addFolder('Pianist Model');
+        pianistFolder.add(settings, 'Show model').onChange(showPianist);
+        pianistFolder.add(settings, 'Show skeleton').onChange(showSkeleton);
         animate();
 
-    } );
+    });
 
     // lights
     var ambient = new THREE.AmbientLight(0xffffff, 1);
@@ -208,7 +211,7 @@ let t1 = Date.now();
 let previouscurrentTime = -1;
 let currentTime;
 function animate() {
-  
+
     requestAnimationFrame(animate);
 
     if (player != undefined) {
@@ -234,36 +237,36 @@ function animate() {
 }
 
 function setBasicPosture() {
-    pianistModel.getObjectByName( 'mixamorigLeftUpLeg' ).rotation.x = -1.4;
-    pianistModel.getObjectByName( 'mixamorigRightUpLeg' ).rotation.x = -1.4;
-    pianistModel.getObjectByName( 'mixamorigRightLeg' ).rotation.x = 1.3;
-    pianistModel.getObjectByName( 'mixamorigLeftLeg' ).rotation.x = 1.4;
-    pianistModel.getObjectByName( 'mixamorigSpine2' ).rotation.x = 0.4;
-    pianistModel.getObjectByName( 'mixamorigLeftLeg' ).rotation.x = 1.4;
-    pianistModel.getObjectByName( 'mixamorigRightFoot' ).rotation.x = -0.3;
-    pianistModel.getObjectByName( 'mixamorigLeftHandThumb1' ).rotation.z = +0.4;
-    pianistModel.getObjectByName( 'mixamorigRightHandThumb1' ).rotation.z = -0.4;
+    pianistModel.getObjectByName('mixamorigLeftUpLeg').rotation.x = -1.4;
+    pianistModel.getObjectByName('mixamorigRightUpLeg').rotation.x = -1.4;
+    pianistModel.getObjectByName('mixamorigRightLeg').rotation.x = 1.3;
+    pianistModel.getObjectByName('mixamorigLeftLeg').rotation.x = 1.4;
+    pianistModel.getObjectByName('mixamorigSpine2').rotation.x = 0.4;
+    pianistModel.getObjectByName('mixamorigLeftLeg').rotation.x = 1.4;
+    pianistModel.getObjectByName('mixamorigRightFoot').rotation.x = -0.3;
+    pianistModel.getObjectByName('mixamorigLeftHandThumb1').rotation.z = +0.4;
+    pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
 
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.x = 0; // ^ upper 
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.y = 0.8; // < - > // *-1
-    pianistModel.getObjectByName( 'mixamorigRightArm' ).rotation.z = 0.55; // ^ upper // *-1
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.x = 0; 
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.y = 1; // lower left rigt
-    pianistModel.getObjectByName( 'mixamorigRightForeArm' ).rotation.z = 1; // lower up down // *-1
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.x= -0.4; //
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.y= 0.4; //*-1
-    pianistModel.getObjectByName( 'mixamorigRightHand' ).rotation.z= 0.1; //*-1
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0; // ^ upper 
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 0.8; // < - > // *-1
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.55; // ^ upper // *-1
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1; // lower left rigt
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 1; // lower up down // *-1
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = -0.4; //
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.y = 0.4; //*-1
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = 0.1; //*-1
 
     setHandById(0, 1);
     setHandById(87, 0);
 }
 
 function setHandById(id, track) {
-    let modificator =  track == 0 ? 1 : -1;
+    let modificator = track == 0 ? 1 : -1;
     id = track == 0 ? (id - 88) * -1 : id + 2;
-    let position =  track == 0 ? "Right" : "Left";
+    let position = track == 0 ? "Right" : "Left";
     if (id > pianistPosition.length - 1)
-        return ;
+        return;
     let posture = pianistPosition[id];
 
     for (const [key, value] of Object.entries(posture)) {
@@ -336,22 +339,53 @@ let createFuturBox = function () {
 
 let createGui = function () {
 
-    let panel = new GUI( { width: 310 } );
-    let folder1 = panel.addFolder( 'Player' );
-    let folder2 = panel.addFolder( 'Models' );
+    panel = new GUI({ width: 310 });
+    let playerFolder = panel.addFolder('Player');
 
-
-    let settings = {
+    settings = {
         'Volume': 20,
         'Pause/Play': pausePlayStop,
         'Next Song': () => player.getNextSong(+1),
         'Previous Song': () => player.getNextSong(-1),
-
+        'Show notes': true,
+        'Show model': true,
+        'Show skeleton': false,
+        'Show piano model': true,
     }
-    folder1.add(settings, "Volume", 0, 100, 1).onChange(SetVolume);
-    folder1.add(settings, "Pause/Play");
-    folder1.add(settings, "Next Song");
-    folder1.add(settings, "Previous Song");
+    playerFolder.add(settings, "Volume", 0, 100, 1).onChange(SetVolume);
+    playerFolder.add(settings, "Pause/Play");
+    playerFolder.add(settings, "Next Song");
+    playerFolder.add(settings, "Previous Song");
+    playerFolder.add(settings, 'Show notes').onChange(showNotes);
+
+
+    const elements = document.getElementsByClassName("closed");
+    for (let el of elements) {
+        el.className = "open";
+        console.log(el)
+    }
+    const el2 = document.getElementsByClassName("closed");
+    console.log(el2)
+
+}
+
+let showNotes = function (visible) {
+    for (const box of futurBoxs) {
+        box.box.visible = visible;
+        box.line.visible = visible;
+    }
+}
+
+let showSkeleton = function (visible) {
+    skeleton.visible = visible;
+}
+
+let showPianist = function (visible) {
+    pianistModel.visible = visible;
+}
+
+let showPiano = function (visible) {
+    pianoModel.visible = visible;
 }
 
 let mididata;
@@ -464,9 +498,11 @@ eventjs.add(window, "load", function (event) {
             MIDI.loader.setValue(progress * 100);
         },
         onsuccess: function () {
+            createGui();
+            init();
+            animate();
             player = MIDI.Player;
             MIDI.setVolume(0, 20);
-            createGui();
             player.loadFile(song[songid % song.length]);
             addTimecode();
             player.addListener(function (data) {
@@ -479,6 +515,7 @@ eventjs.add(window, "load", function (event) {
                     setKey(pianoKey, false);
                 }
             });
+
             ///
             MIDIPlayerPercentage(player);
         }
