@@ -3,11 +3,12 @@ import { OrbitControls } from './three/OrbitControls.js';
 import { GUI } from './three/dat.gui.module.js';
 import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
+import Stats from './three/stats.module.js';
+import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
-var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20
-var pianistModel, skeleton, pianoModel, panel, settings;
-
-
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, stats;
+var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
+var t1 = Date.now(), previouscurrentTime = -1, currentTime;
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -81,31 +82,31 @@ function init() {
     controls.maxDistance = 500;
 
     controls.maxPolarAngle = Math.PI / 2;
-    // ground 
-    var loader = new THREE.TextureLoader();
-    var groundTexture = loader.load('./images/ground.png');
+    // ground
+    let loader = new THREE.TextureLoader();
+    let groundTexture = loader.load('./images/ground.png');
     groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
     groundTexture.repeat.set(1, 1);
     groundTexture.anisotropy = 16;
     groundTexture.opacity = 0.2;
     groundTexture.encoding = THREE.sRGBEncoding;
 
-    var groundMaterial = new THREE.MeshPhongMaterial({ map: groundTexture, transparent: true });
+    let groundMaterial = new THREE.MeshPhongMaterial({ map: groundTexture, transparent: true });
 
-    var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500), groundMaterial);
-    mesh.position.y = -10;
+    let mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(250, 250), groundMaterial);
     mesh.rotation.x = - Math.PI / 2;
     mesh.receiveShadow = true;
+    mesh.position.set(0, -10, -50);
     scene.add(mesh);
     // piano Keyboard
 
     pianoKeys = generatePiano(scene);
 
     // piano model
-    var dracoLoader = new DRACOLoader();
+    let dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('./js/draco/gltf/');
 
-    var loader = new GLTFLoader();
+    loader = new GLTFLoader();
 
     loader.setDRACOLoader(dracoLoader);
     loader.load('./js/model/Grand_Piano_test.glb', function (gltf) {
@@ -153,23 +154,37 @@ function init() {
     });
 
     // lights
-    var ambient = new THREE.AmbientLight(0xffffff, 1);
-    let light1 = new THREE.PointLight(0xffffff, 150, 40);
-    light1.position.set(0, 20, 20)
+    let textureLoader = new THREE.TextureLoader();
+
+    let textureFlare0 = textureLoader.load( '../images/lensflare0.png' );
+    let ambient = new THREE.AmbientLight(0xffffff, 1);
+    light1 = addLight(305.73, 100, 69.8, 0, 20, 20);
     scene.add(light1);
 
-    let light2 = new THREE.PointLight(0xffffff, 1.5, 150);
-    light2.position.set(35, 25, -70)
+    light2 = addLight(205, 92, 59, 35, 25, -70);
     scene.add(light2);
 
-    let light3 = new THREE.PointLight(0xffffff, 1.5, 150);
-    light3.position.set(-55, 25, -60)
+    light3 = addLight(305.73, 100, 69.8, -55, 25, -60);
     scene.add(light3);
 
-    let light4 = new THREE.PointLight(0xffffff, 1.5, 150);
-    light4.position.set(0, 45, -150)
+    light4 = addLight(205, 92, 59, 0, 45, -150);
     scene.add(light4);
     scene.add(ambient);
+    
+    function addLight( h, s, l, x, y, z ) {
+
+        let light = new THREE.PointLight( 0xffffff, 5, 150 );
+        light.color.setHSL( h / 360, s / 100, l / 100);
+        light.position.set( x, y, z ); 
+        scene.add( light );
+
+        var lensflare = new Lensflare();
+        lensflare.addElement( new LensflareElement( textureFlare0, 60, 0, light.color ) );
+
+        light.add( lensflare );
+        return light;
+    } 
+
     // skybox
     let materialArray = [];
     let texture_ft = new THREE.TextureLoader().load('../images/corona_ft.png');
@@ -192,6 +207,11 @@ function init() {
     let skyboxGeo = new THREE.BoxGeometry(5000, 5000, 5000);
     let skybox = new THREE.Mesh(skyboxGeo, materialArray);
     scene.add(skybox);
+
+    //stats
+    stats = new Stats();
+    document.body.appendChild( stats.dom );
+
     animate();
 
     window.addEventListener('resize', onWindowResize, true);
@@ -207,30 +227,9 @@ function onWindowResize() {
 
 }
 
-let t1 = Date.now();
-let previouscurrentTime = -1;
-let currentTime;
 function animate() {
 
     requestAnimationFrame(animate);
-
-    if (player != undefined) {
-        currentTime = player.currentTime;
-        if (!MIDI.Player.playing)
-            currentTime = previouscurrentTime;
-        if (previouscurrentTime == player.currentTime && MIDI.Player.playing) {
-            currentTime = Date.now() - t1 + player.currentTime;
-        }
-        else {
-            t1 = Date.now();
-            previouscurrentTime = currentTime;
-        }
-    }
-    for (let box of futurBoxs) {
-        box.box.position.y = box.baseY - currentTime / 100;
-        box.line.position.y = box.baseY - currentTime / 100;
-    }
-    controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
 
     render();
 
@@ -278,14 +277,49 @@ function setHandById(id, track) {
 }
 
 function render() {
+    let time = Date.now() * 0.0005;
 
+    light1.position.x = Math.sin( time * 0.7 ) * 30;
+    light1.position.y = Math.cos( time * 0.5 ) * 40;
+    //light1.position.z = Math.cos( time * 0.3 ) * 30;
+
+    light2.position.x = Math.cos( time * 0.3 ) * 30;
+    light2.position.y = Math.sin( time * 0.5 ) * 40;
+    light2.position.z = Math.sin( time * 0.7 ) * 30;
+
+    light3.position.x = Math.sin( time * 0.7 ) * 30;
+    light3.position.y = Math.cos( time * 0.3 ) * 40;
+    light3.position.z = Math.sin( time * 0.5 ) * 30;
+
+    light4.position.x = Math.sin( time * 0.3 ) * 30;
+    light4.position.y = Math.cos( time * 0.7 ) * 40;
+    light4.position.z = Math.sin( time * 0.5 ) * 30;
+
+    if (player != undefined) {
+        currentTime = player.currentTime;
+        if (!MIDI.Player.playing)
+            currentTime = previouscurrentTime;
+        if (previouscurrentTime == player.currentTime && MIDI.Player.playing) {
+            currentTime = Date.now() - t1 + player.currentTime;
+        }
+        else {
+            t1 = Date.now();
+            previouscurrentTime = currentTime;
+        }
+    }
+    for (let box of futurBoxs) {
+        box.box.position.y = box.baseY - currentTime / 100;
+        box.line.position.y = box.baseY - currentTime / 100;
+    }
+    controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+    stats.update();
     renderer.render(scene, camera);
 
 }
 
 
-let colorNote_w = [0x42d4f5, 0xe33030];
-let colorNote_b = [0x10b5b2, 0xbf2828];
+let colorNote_w = [0x37a6f7, 0xd237c3];
+let colorNote_b = [0x2786ca, 0xa92b9d];
 let createBox = function (pianoKey, width, data) {
     let color = colorNote_b[data.track % 2];
     if (pianoKey.isWhite)
@@ -293,7 +327,7 @@ let createBox = function (pianoKey, width, data) {
     const velocity = data.velocity * 10;
     const datatime = data.time * 10;
     const geometry = new THREE.BoxGeometry(width, velocity, 1);
-    const material = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 1, side: THREE.DoubleSide });
+    const material = new THREE.MeshLambertMaterial({ color: color, transparent: true, opacity: 1, side: THREE.DoubleSide });
     const edges = new THREE.EdgesGeometry(geometry);
 
     let box = new THREE.Mesh(geometry, material);
@@ -320,6 +354,8 @@ let createFuturBox = function () {
         scene.remove(box.line);
     }
     futurBoxs = [];
+    if (mididata == undefined)
+        return;
     for (let data of mididata) {
         if (data.msg.subtype == "noteOn") {
             let n = data.msg.noteNumber - 21;
