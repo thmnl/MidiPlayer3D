@@ -9,6 +9,7 @@ import { Lensflare, LensflareElement } from './three/Lensflare.js';
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, stats;
 var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
+var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty;
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -118,11 +119,10 @@ function init() {
         scene.add(pianoModel);
         let pianoFolder = panel.addFolder('Piano Model');
         pianoFolder.add(settings, 'Show piano model').onChange(showPiano);
-        animate();
 
-    }, function ( xhr ) {
-		document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + ( xhr.loaded / xhr.total * 100 ).toFixed(0) + "%";
-	}, function (e) {
+    }, function (xhr) {
+        document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + (xhr.loaded / xhr.total * 100).toFixed(0) + "%";
+    }, function (e) {
 
         console.error(e);
 
@@ -152,7 +152,6 @@ function init() {
         pianistFolder.add(settings, 'Show model').onChange(showPianist);
         pianistFolder.add(settings, 'Show skeleton').onChange(showSkeleton);
 
-        animate();
 
     });
 
@@ -162,16 +161,9 @@ function init() {
     let textureFlare0 = textureLoader.load('../images/lensflare0.png');
     let ambient = new THREE.AmbientLight(0xffffff, 0.5);
     light1 = addLight(305.73, 100, 69.8);
-    scene.add(light1);
-
     light2 = addLight(205, 92, 59);
-    scene.add(light2);
-
     light3 = addLight(305.73, 100, 69.8);
-    scene.add(light3);
-
     light4 = addLight(205, 92, 59);
-    scene.add(light4);
     scene.add(ambient);
 
     function addLight(h, s, l) {
@@ -183,6 +175,7 @@ function init() {
         lensflare.addElement(new LensflareElement(textureFlare0, 60, 0, light.color));
 
         light.add(lensflare);
+        scene.add(light)
         return light;
     }
 
@@ -212,8 +205,6 @@ function init() {
     //stats
     stats = new Stats();
     document.body.appendChild(stats.dom);
-
-    animate();
 
     window.addEventListener('resize', onWindowResize, true);
 
@@ -248,20 +239,122 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
 
     pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0; // ^ upper 
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 0.8; // < - > // *-1
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.55; // ^ upper // *-1
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 1.2; // < - > // *-1
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.6; // ^ upper // *-1
     pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1; // lower left rigt // *-1
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 1; // lower up down // *-1
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = -0.4; //
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.y = 0.4; //*-1
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = 0.1; //*-1
-
-    setHandById(40, 1);
-    setHandById(50, 0);
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1.4; // lower left rigt // *-1
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = -0.22; // lower up down // *-1
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = 0.8; //
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.y = -0.5; //*-1
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = -0.15; //*-1
+    mixamorig = {
+        mixamorigRightArm: pianistModel.getObjectByName('mixamorigRightArm'),
+        mixamorigRightForeArm: pianistModel.getObjectByName('mixamorigRightForeArm'),
+        mixamorigRightHand: pianistModel.getObjectByName('mixamorigRightHand'),
+        mixamorigLeftArm: pianistModel.getObjectByName('mixamorigLeftArm'),
+        mixamorigLeftForeArm: pianistModel.getObjectByName('mixamorigLeftForeArm'),
+        mixamorigLeftHand: pianistModel.getObjectByName('mixamorigLeftHand'),
+        mixamorigHead: pianistModel.getObjectByName('mixamorigHead'),
+    }
+    rigHelper = {
+        mixamorigRightArm: { x: 0, y: 0, z: 0 },
+        mixamorigRightForeArm: { x: 0, y: 0, z: 0 },
+        mixamorigRightHand: { x: 0, y: 0, z: 0 },
+        mixamorigLeftArm: { x: 0, y: 0, z: 0 },
+        mixamorigLeftForeArm: { x: 0, y: 0, z: 0 },
+        mixamorigLeftHand: { x: 0, y: 0, z: 0 },
+        mixamorigHead: { x: 0, y: 0, z: 0 },
+        right: {
+            startTime: 0,
+            targetTime: 0,
+            mixamorigRightArm: 0,
+            mixamorigRightForeArm: 0,
+            mixamorigRightHand: 0,
+            average: 0,
+        },
+        left: {
+            startTime: 0,
+            targetTime: 0,
+            mixamorigLeftArm: 0,
+            mixamorigLeftForeArm: 0,
+            mixamorigLeftHand: 0,
+            average: 0,
+        }
+    }
 }
 
-function setHandById(id, track) {
+function translateHead() {
+    if (mixamorig == undefined)
+        return;
+    if (headTarget == mixamorig.mixamorigHead.rotation.y || headTargetTime < currentTime / 1000) {
+        if (Math.floor(Math.random() * 50) == 0 && MIDI.Player.playing) {
+            if (futurAverage < 20)
+                headTarget = 0.7;
+            else if (futurAverage < 30)
+                headTarget = -0.5;
+            else if (futurAverage < 40)
+                headTarget = -0.1;
+            else if (futurAverage < 50)
+                headTarget = 0.1;
+            else if (futurAverage < 70)
+                headTarget = 0.5;
+            else
+                headTarget = 0.7;
+            headTargetTime = currentTime / 1000 + 0.5
+            headStarty = mixamorig.mixamorigHead.rotation.y
+        }
+        else
+            return;
+    }
+    if (headTargetTime < currentTime / 1000)
+        return;
+    if (!MIDI.Player.playing)
+        return;
+    let range = ((currentTime / 1000) - (headTargetTime - 0.5)) / 0.5;
+    mixamorig.mixamorigHead.rotation.y = range * (headTarget - headStarty) + headStarty
+}
+
+
+function translateHands(track) {
+    if (mididata == undefined || rigHelper == undefined)
+        return;
+    let nextEvents = [];
+    let futurEvents = mididata.filter(data => data.time > currentTime / 1000 && data.track == track && data.msg.subtype == "noteOn")
+    let average = 0;
+    let helper = track == 0 ? rigHelper.right : rigHelper.left;
+
+    if (futurEvents.length > 0) {
+        const timeReference = futurEvents[0].time
+        nextEvents = futurEvents.filter(data => data.time == timeReference)
+    }
+    if (nextEvents.length <= 0)
+        return;
+    for (let i = 0; i < nextEvents.length; i++) {
+        average += nextEvents[i].msg.noteNumber - 21
+    }
+    if (helper.average != average) {
+        helper.startTime = currentTime / 1000
+        helper.targetTime = nextEvents[0].time
+        if (track == 0) {
+            helper.mixamorigRightArm = mixamorig.mixamorigRightArm.rotation
+            helper.mixamorigRightForeArm = mixamorig.mixamorigRightForeArm.rotation
+            helper.mixamorigRightHand = mixamorig.mixamorigRightHand.rotation
+        }
+        else {
+            helper.mixamorigLeftArm = mixamorig.mixamorigLeftArm.rotation
+            helper.mixamorigLeftForeArm = mixamorig.mixamorigLeftForeArm.rotation
+            helper.mixamorigLeftHand = mixamorig.mixamorigLeftHand.rotation
+        }
+        helper.average = average
+    }
+    futurAverage = average;
+    average /= nextEvents.length;
+    setHandById(Math.floor(average), track, helper)
+}
+
+function setHandById(id, track, helper) {
+    if (pianistModel == undefined)
+        return;
     let modificator = track == 0 ? 1 : -1;
     id = track == 0 ? (id - 88) * -1 : id + 2;
     let position = track == 0 ? "Right" : "Left";
@@ -271,30 +364,36 @@ function setHandById(id, track) {
 
     for (const [key, value] of Object.entries(posture)) {
         const modifiedKey = key.replace("Position", position);
-        pianistModel.getObjectByName(modifiedKey).rotation.x = value.x;
-        pianistModel.getObjectByName(modifiedKey).rotation.y = value.y * modificator;
-        pianistModel.getObjectByName(modifiedKey).rotation.z = value.z * modificator;
+        let x, y, z;
+        let ctime = currentTime / 1000
+        let r = (ctime - helper.startTime) / (helper.targetTime - helper.startTime);
+        x = helper[modifiedKey].x;
+        y = helper[modifiedKey].y;
+        z = helper[modifiedKey].z;
+        mixamorig[modifiedKey].rotation.x = r * (value.x - x) + x
+        mixamorig[modifiedKey].rotation.y = (r * (value.y * modificator - y) + y);
+        mixamorig[modifiedKey].rotation.z = (r * (value.z * modificator - z) + z);
     }
 }
 
 function render() {
     let t = clock.getElapsedTime();
 
-    light1.position.x = Math.sin( t * 0.7 ) * 30;
-    light1.position.y = Math.cos( t * 0.5 ) * 40;
-    light1.position.z = Math.cos( t * 0.3 ) * 30;
+    light1.position.x = Math.sin(t * 0.7) * 30;
+    light1.position.y = Math.cos(t * 0.5) * 40 + 30;
+    light1.position.z = Math.cos(t * 0.3) * 30;
 
-    light2.position.x = Math.cos( t * 0.3 ) * 30;
-    light2.position.y = Math.sin( t * 0.5 ) * 40;
-    light2.position.z = Math.sin( t * 0.7 ) * 30;
+    light2.position.x = Math.cos(t * 0.3) * 30;
+    light2.position.y = Math.sin(t * 0.5) * 40 + 30;
+    light2.position.z = Math.sin(t * 0.7) * 30;
 
-    light3.position.x = Math.sin( t * 0.7 ) * 30;
-    light3.position.y = Math.cos( t * 0.3 ) * 40;
-    light3.position.z = Math.sin( t * 0.5 ) * 30;
+    light3.position.x = Math.sin(t * 0.7) * 30;
+    light3.position.y = Math.cos(t * 0.3) * 40 + 30;
+    light3.position.z = Math.sin(t * 0.5) * 30;
 
-    light4.position.x = Math.sin( t * 0.3 ) * 30;
-    light4.position.y = Math.cos( t * 0.7 ) * 40;
-    light4.position.z = Math.sin( t * 0.5 ) * 30;
+    light4.position.x = Math.sin(t * 0.3) * 30;
+    light4.position.y = Math.cos(t * 0.7) * 40 + 30;
+    light4.position.z = Math.sin(t * 0.5) * 30;
 
     if (player != undefined) {
         currentTime = player.currentTime;
@@ -308,18 +407,24 @@ function render() {
             previouscurrentTime = currentTime;
         }
     }
-    for (let box of futurBoxs) {
+
+    for (let [i, box] of futurBoxs.entries()) {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
-        if (box.box.position.y < pianoFloor ) {
-            box.box.visible = false
-            box.line.visible = false
+        if (box.box.position.y < pianoFloor) {
+            scene.remove(box.box);
+            scene.remove(box.line);
+            futurBoxs.splice(i, 1);
+            createFuturBox(false);
         }
-        if (box.box.position.y > pianoFloor ) {
+        if (box.box.position.y > pianoFloor) {
             box.box.visible = settings["Show notes"];
             box.line.visible = settings["Show notes"];
         }
     }
+    translateHands(0);
+    translateHands(1);
+    translateHead();
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     stats.update();
     renderer.render(scene, camera);
@@ -330,6 +435,7 @@ function render() {
 let colorNote_w = [0x37a6f7, 0xd237c3];
 let colorNote_b = [0x2786ca, 0xa92b9d];
 let createBox = function (pianoKey, width, data) {
+    data.drawn = "true";
     let color = colorNote_b[data.track % 2];
     if (pianoKey.isWhite)
         color = colorNote_w[data.track % 2];
@@ -358,17 +464,25 @@ let createBox = function (pianoKey, width, data) {
     futurBoxs.push({ box: box, line: line, baseY: datatime + velocity / 2 + pianoFloor, velocity: velocity });
 }
 
-let createFuturBox = function () {
-    //clear box
-    for (const box of futurBoxs) {
-        scene.remove(box.box);
-        scene.remove(box.line);
+let createFuturBox = function (clearBox = true) {
+    if (clearBox) {
+        for (const box of futurBoxs) {
+            scene.remove(box.box);
+            scene.remove(box.line);
+        }
+        futurBoxs = [];
+        for (let i = 0; i < mididata.length; i++) {
+            mididata[i].drawn = false;
+        }
     }
-    futurBoxs = [];
     if (mididata == undefined)
         return;
     for (let data of mididata) {
         if (data.msg.subtype == "noteOn") {
+            if (futurBoxs.length > 350)
+                return;
+            if (data.time < currentTime / 1000 || data.drawn)
+                continue;
             let n = data.msg.noteNumber - 21;
             let width;
             let pianoKey = pianoKeys[n];
@@ -405,15 +519,10 @@ let createGui = function () {
     playerFolder.add(settings, "Previous Song");
     playerFolder.add(settings, 'Show notes').onChange(showNotes);
 
-
     const elements = document.getElementsByClassName("closed");
     for (let el of elements) {
         el.className = "open";
-        console.log(el)
     }
-    const el2 = document.getElementsByClassName("closed");
-    console.log(el2)
-
 }
 
 let showNotes = function (visible) {
@@ -446,6 +555,7 @@ let addTimecode = function () {
             msg: data[0].event,
             velocity: data[0].event.velocity / 10,
             track: data[0].track,
+            drawn: false,
         };
         mididata.push(newdata);
     }
@@ -459,6 +569,7 @@ let addTimecode = function () {
             }
         }
     }
+    currentTime = 0;
     createFuturBox();
 }
 
@@ -547,7 +658,6 @@ eventjs.add(window, "load", function (event) {
         onsuccess: function () {
             createGui();
             init();
-            animate();
             player = MIDI.Player;
             MIDI.setVolume(0, 20);
             player.loadFile(song[songid % song.length]);
@@ -556,7 +666,6 @@ eventjs.add(window, "load", function (event) {
                 let pianoKey = data.note - 21;
                 if (data.message === 144) {
                     setKey(pianoKey, true);
-                    setHandById(pianoKey, data.track);
                 }
                 else {
                     setKey(pianoKey, false);
@@ -565,6 +674,7 @@ eventjs.add(window, "load", function (event) {
 
             ///
             MIDIPlayerPercentage(player);
+            animate();
         }
     });
 });
@@ -583,6 +693,8 @@ let MIDIPlayerPercentage = function (player) {
         if (self.state === "down") {
             player.pause(true);
         } else if (self.state === "up") {
+            currentTime = player.currentTime;
+            createFuturBox();
             player.resume();
         }
     });

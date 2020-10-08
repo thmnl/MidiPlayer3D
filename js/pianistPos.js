@@ -1,4 +1,4 @@
-var pianistPosition = [ //from 88 to 1
+var pianistPosition = [ //from 88 to 1 on right hand
     { mixamorigPositionArm: { x: 0, y: 0.8, z: 0.15 }, mixamorigPositionForeArm: { x: 0, y: 0, z: 0 }, mixamorigPositionHand: { x: -0.5, y: 0, z: -0.1 } },
     { mixamorigPositionArm: { x: 0, y: 0.8, z: 0.15 }, mixamorigPositionForeArm: { x: 0, y: 0, z: 0 }, mixamorigPositionHand: { x: -0.5, y: 0, z: -0.1 } },
     { mixamorigPositionArm: { x: 0, y: 0.8, z: 0.15 }, mixamorigPositionForeArm: { x: 0, y: 0, z: 0 }, mixamorigPositionHand: { x: -0.5, y: 0, z: -0.1 } },
@@ -44,5 +44,9 @@ var pianistPosition = [ //from 88 to 1
     { mixamorigPositionArm: { x: 0, y: 1.8, z: 1.2 }, mixamorigPositionForeArm: { x: 0, y: 1.3, z: -1.62 }, mixamorigPositionHand: { x: 1.1, y: 0, z: -0.1 } },
     { mixamorigPositionArm: { x: 0, y: 1.85, z: 1.22 }, mixamorigPositionForeArm: { x: 0, y: 1.3, z: -1.62 }, mixamorigPositionHand: { x: 1.3, y: 0, z: -0.1 } },
     { mixamorigPositionArm: { x: 0, y: 1.9, z: 1.22 }, mixamorigPositionForeArm: { x: 0, y: 1.3, z: -1.62 }, mixamorigPositionHand: { x: 1.3, y: 0, z: -0.1 } },
-
+    { mixamorigPositionArm: { x: 0, y: 1.05, z: 0.7 }, mixamorigPositionForeArm: { x: 0, y: 1.53, z: -0.22 }, mixamorigPositionHand: { x: 1, y: -0.5, z: -0.1 } },
+    { mixamorigPositionArm: { x: 0, y: 1.05, z: 0.7 }, mixamorigPositionForeArm: { x: 0, y: 1.53, z: -0.22 }, mixamorigPositionHand: { x: 1, y: -0.5, z: -0.1 } },
+    { mixamorigPositionArm: { x: 0, y: 1.05, z: 0.7 }, mixamorigPositionForeArm: { x: 0, y: 1.53, z: -0.22 }, mixamorigPositionHand: { x: 1, y: -0.5, z: -0.1 } },
+    { mixamorigPositionArm: { x: 0, y: 1.2, z: 0.6 }, mixamorigPositionForeArm: { x: 0, y: 1.4, z: -0.22 }, mixamorigPositionHand: { x: 0.8, y: -0.6, z: -0.15 } },
+    { mixamorigPositionArm: { x: 0, y: 1.2, z: 0.6 }, mixamorigPositionForeArm: { x: 0, y: 1.4, z: -0.22 }, mixamorigPositionHand: { x: 0.8, y: -0.5, z: -0.15 } }
 ]
