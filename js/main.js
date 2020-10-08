@@ -283,7 +283,7 @@ function setBasicPosture() {
     }
 }
 
-function translateHead() {
+function transitionHead() {
     if (mixamorig == undefined)
         return;
     if (headTarget == mixamorig.mixamorigHead.rotation.y || headTargetTime < currentTime / 1000) {
@@ -315,7 +315,7 @@ function translateHead() {
 }
 
 
-function translateHands(track) {
+function transitionHands(track) {
     if (mididata == undefined || rigHelper == undefined)
         return;
     let nextEvents = [];
@@ -422,9 +422,9 @@ function render() {
             box.line.visible = settings["Show notes"];
         }
     }
-    translateHands(0);
-    translateHands(1);
-    translateHead();
+    transitionHands(0);
+    transitionHands(1);
+    transitionHead();
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     stats.update();
     renderer.render(scene, camera);
