@@ -238,7 +238,7 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigLeftHandThumb1').rotation.z = +0.4;
     pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
 
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0; // ^ upper 
+    /*pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0; // ^ upper 
     pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 1.2; // < - > // *-1
     pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.6; // ^ upper // *-1
     pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
@@ -246,7 +246,7 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = -0.22; // lower up down // *-1
     pianistModel.getObjectByName('mixamorigRightHand').rotation.x = 0.8; //
     pianistModel.getObjectByName('mixamorigRightHand').rotation.y = -0.5; //*-1
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = -0.15; //*-1
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = -0.15; //*-1*/
     mixamorig = {
         mixamorigRightArm: pianistModel.getObjectByName('mixamorigRightArm'),
         mixamorigRightForeArm: pianistModel.getObjectByName('mixamorigRightForeArm'),
@@ -310,8 +310,12 @@ function transitionHead() {
         return;
     if (!MIDI.Player.playing)
         return;
-    let range = ((currentTime / 1000) - (headTargetTime - 0.5)) / 0.5;
+    const range = ((currentTime / 1000) - (headTargetTime - 0.5)) / 0.5;
     mixamorig.mixamorigHead.rotation.y = range * (headTarget - headStarty) + headStarty
+    if (mixamorig.mixamorigHead.rotation.y > 0.7)
+        mixamorig.mixamorigHead.rotation.y = 0.7;
+    if (mixamorig.mixamorigHead.rotation.y < -0.7)
+        mixamorig.mixamorigHead.rotation.y = -0.7;
 }
 
 
@@ -332,6 +336,7 @@ function transitionHands(track) {
     for (let i = 0; i < nextEvents.length; i++) {
         average += nextEvents[i].msg.noteNumber - 21
     }
+    average = Math.floor(average / nextEvents.length);
     if (helper.average != average) {
         helper.startTime = currentTime / 1000
         helper.targetTime = nextEvents[0].time
@@ -345,39 +350,41 @@ function transitionHands(track) {
             helper.mixamorigLeftForeArm = mixamorig.mixamorigLeftForeArm.rotation
             helper.mixamorigLeftHand = mixamorig.mixamorigLeftHand.rotation
         }
-        helper.average = average
+        helper.average = average;
     }
     futurAverage = average;
-    average /= nextEvents.length;
-    setHandById(Math.floor(average), track, helper)
+    setHandById(average, track)
 }
 
-function setHandById(id, track, helper) {
+function setHandById(id, track) {
     if (pianistModel == undefined)
         return;
-    let modificator = track == 0 ? 1 : -1;
+    const modificator = track == 0 ? 1 : -1;
+    let helper = track == 0 ? rigHelper.right : rigHelper.left;
     id = track == 0 ? (id - 88) * -1 : id + 2;
-    let position = track == 0 ? "Right" : "Left";
+    const position = track == 0 ? "Right" : "Left";
     if (id > pianistPosition.length - 1)
         return;
-    let posture = pianistPosition[id];
-
+    const posture = pianistPosition[id];
+    const ctime = currentTime / 1000
+    const r = (ctime - helper.startTime) / (helper.targetTime - helper.startTime);
+    if (ctime > helper.targetTime) {
+        return;
+    }
     for (const [key, value] of Object.entries(posture)) {
         const modifiedKey = key.replace("Position", position);
         let x, y, z;
-        let ctime = currentTime / 1000
-        let r = (ctime - helper.startTime) / (helper.targetTime - helper.startTime);
         x = helper[modifiedKey].x;
         y = helper[modifiedKey].y;
         z = helper[modifiedKey].z;
         mixamorig[modifiedKey].rotation.x = r * (value.x - x) + x
-        mixamorig[modifiedKey].rotation.y = (r * (value.y * modificator - y) + y);
-        mixamorig[modifiedKey].rotation.z = (r * (value.z * modificator - z) + z);
+        mixamorig[modifiedKey].rotation.y = r * (value.y * modificator - y) + y;
+        mixamorig[modifiedKey].rotation.z = r * (value.z * modificator - z) + z;
     }
 }
 
 function render() {
-    let t = clock.getElapsedTime();
+    const t = clock.getElapsedTime();
 
     light1.position.x = Math.sin(t * 0.7) * 30;
     light1.position.y = Math.cos(t * 0.5) * 40 + 30;
@@ -407,7 +414,9 @@ function render() {
             previouscurrentTime = currentTime;
         }
     }
-
+    if (currentTime == 0) {
+        createFuturBox();
+    }
     for (let [i, box] of futurBoxs.entries()) {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
@@ -696,6 +705,7 @@ let MIDIPlayerPercentage = function (player) {
             currentTime = player.currentTime;
             createFuturBox();
             player.resume();
+            headTargetTime = 0;
         }
     });
     //
