@@ -559,6 +559,7 @@ let mididata;
 let addTimecode = function () {
     let t = 0;
     mididata = [];
+    document.getElementById("songname").innerHTML = "Currently playing : " + songname[songid % songname.length]
     for (let data of player.data) {
         t += data[1];
         let newdata = {
