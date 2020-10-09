@@ -3,13 +3,12 @@ import { OrbitControls } from './three/OrbitControls.js';
 import { GUI } from './three/dat.gui.module.js';
 import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
-import Stats from './three/stats.module.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, stats;
 var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
-var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty;
+var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -110,7 +109,7 @@ function init() {
     loader = new GLTFLoader();
 
     loader.setDRACOLoader(dracoLoader);
-    loader.load('./js/model/Grand_Piano_test.glb', function (gltf) {
+    loader.load('./js/model/Grand_Piano.glb', function (gltf) {
         document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
         pianoModel.position.set(43, -30 + pianoFloor, -3);
@@ -202,10 +201,6 @@ function init() {
     let skybox = new THREE.Mesh(skyboxGeo, materialArray);
     scene.add(skybox);
 
-    //stats
-    stats = new Stats();
-    document.body.appendChild(stats.dom);
-
     window.addEventListener('resize', onWindowResize, true);
 
 }
@@ -237,16 +232,17 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigRightFoot').rotation.x = -0.3;
     pianistModel.getObjectByName('mixamorigLeftHandThumb1').rotation.z = +0.4;
     pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.x = -0.5;
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 1.5;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1.9;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 0.9;
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = 0.3;
+    pianistModel.getObjectByName('mixamorigLeftArm').rotation.x = -0.5;
+    pianistModel.getObjectByName('mixamorigLeftArm').rotation.z = -1.5;
+    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.y = -1.3;
+    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.z = -0.9;
+    pianistModel.getObjectByName('mixamorigLeftHand').rotation.x = 0.3;
 
-    /*pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0; // ^ upper 
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 1.2; // < - > // *-1
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0.6; // ^ upper // *-1
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1.4; // lower left rigt // *-1
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = -0.22; // lower up down // *-1
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = 0.8; //
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.y = -0.5; //*-1
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = -0.15; //*-1*/
     mixamorig = {
         mixamorigRightArm: pianistModel.getObjectByName('mixamorigRightArm'),
         mixamorigRightForeArm: pianistModel.getObjectByName('mixamorigRightForeArm'),
@@ -368,7 +364,7 @@ function setHandById(id, track) {
     const posture = pianistPosition[id];
     const ctime = currentTime / 1000
     const r = (ctime - helper.startTime) / (helper.targetTime - helper.startTime);
-    if (ctime > helper.targetTime) {
+    if (r > 1 || r < 0) {
         return;
     }
     for (const [key, value] of Object.entries(posture)) {
@@ -385,6 +381,11 @@ function setHandById(id, track) {
 
 function render() {
     const t = clock.getElapsedTime();
+
+    if (currentTime / 1000> 3) 
+        document.getElementById("info").style.visibility = "hidden"
+    else
+        document.getElementById("info").style.visibility = "visible"
 
     light1.position.x = Math.sin(t * 0.7) * 30;
     light1.position.y = Math.cos(t * 0.5) * 40 + 30;
@@ -414,7 +415,8 @@ function render() {
             previouscurrentTime = currentTime;
         }
     }
-    if (currentTime == 0) {
+    if (currentTime == 0 && lastBoxRefresh != currentTime) {
+        lastBoxRefresh = currentTime;
         createFuturBox();
     }
     for (let [i, box] of futurBoxs.entries()) {
@@ -424,6 +426,7 @@ function render() {
             scene.remove(box.box);
             scene.remove(box.line);
             futurBoxs.splice(i, 1);
+            lastBoxRefresh = currentTime;
             createFuturBox(false);
         }
         if (box.box.position.y > pianoFloor) {
@@ -435,7 +438,6 @@ function render() {
     transitionHands(1);
     transitionHead();
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-    stats.update();
     renderer.render(scene, camera);
 
 }
