@@ -109,7 +109,7 @@ function init() {
     loader = new GLTFLoader();
 
     loader.setDRACOLoader(dracoLoader);
-    loader.load('./js/model/Grand_Piano.glb', function (gltf) {
+    loader.load('../model/Grand_Piano.glb', function (gltf) {
         document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
         pianoModel.position.set(43, -30 + pianoFloor, -3);
@@ -127,7 +127,7 @@ function init() {
 
     });
     //pianist model 
-    loader.load('./js/model/Xbot.glb', function (gltf) {
+    loader.load('../model/Pianist.glb', function (gltf) {
 
         pianistModel = gltf.scene;
         pianistModel.scale.set(35, 35, 35);
