@@ -10,4 +10,4 @@ For example, with Python : `python -m http.server 8000` </br>
 Then go to http://localhost:8000/MIDIPlayer3D.html</br>
 
 ### THE GRAND PIANO MODEL IS NOT INCLUDED
-You can buy it from https://www.cgtrader.com/3d-models/various/various-models/grand-piano-3d-model-b0d5faf5-7522-4624-9102-120821a63bcc, then you will need to remove the keyboard and the room with blender. 
+You can buy it from https://www.cgtrader.com/3d-models/furniture/other/grand-piano-ue4-ready, then you will need to remove the keyboard and the room with blender. 
