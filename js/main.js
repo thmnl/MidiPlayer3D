@@ -5,7 +5,7 @@ import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
-var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 20, stats;
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21;
 var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
@@ -109,18 +109,31 @@ function init() {
     loader = new GLTFLoader();
 
     loader.setDRACOLoader(dracoLoader);
-    loader.load('../model/Grand_Piano.glb', function (gltf) {
+    loader.load('../model/GrandPianoWK.glb', function (gltf) {
         document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
-        pianoModel.position.set(43, -30 + pianoFloor, -3);
-        pianoModel.scale.set(37, 37, 37);
-
+        pianoModel.position.set(1, -31 + pianoFloor, -53);
+        pianoModel.scale.set(42.5, 42.5, 42.5);
+        pianoModel.rotation.set(0, -1.570, 0);
         scene.add(pianoModel);
         let pianoFolder = panel.addFolder('Piano Model');
         pianoFolder.add(settings, 'Show piano model').onChange(showPiano);
+        pianoModel.getObjectByName('Bench_Low001').position.y += 0.03;
 
     }, function (xhr) {
-        document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + (xhr.loaded / xhr.total * 100).toFixed(0) + "%";
+        document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + (xhr.loaded / 16124588 * 100).toFixed(0) + "%"; //xhr.total is not working remotly
+        if ((xhr.loaded / 16124588 * 100).toFixed(0) > 10) {
+            $('#status').fadeOut('slow'); // will first fade out the loading animation
+            $('#preloader').delay(350).fadeOut('slow'); // will fade out the white DIV that covers the website.
+            $('body').delay(350).css({
+                'overflow': 'visible'
+            });
+        }
+        else {
+            let percent = (xhr.loaded / 16124588 * 1000).toFixed(0);
+            percent > 100 ? percent = 100 : percent = percent;
+            document.getElementsByClassName("preloader-p")[0].innerHTML = "Loading... " + percent + "%";
+        }
     }, function (e) {
 
         console.error(e);
@@ -131,15 +144,14 @@ function init() {
 
         pianistModel = gltf.scene;
         pianistModel.scale.set(35, 35, 35);
-        pianistModel.position.set(0, -20, 16);
+        pianistModel.position.set(1, -40 + pianoFloor, 16);
         pianistModel.rotation.set(0, 3.15, 0);
 
         scene.add(pianistModel);
 
         pianistModel.traverse(function (object) {
-
-            if (object.isMesh) object.castShadow = true;
-
+            if (object.isMesh)
+                object.castShadow = true;
         });
 
         skeleton = new THREE.SkeletonHelper(pianistModel);
@@ -150,8 +162,6 @@ function init() {
         let pianistFolder = panel.addFolder('Pianist Model');
         pianistFolder.add(settings, 'Show model').onChange(showPianist);
         pianistFolder.add(settings, 'Show skeleton').onChange(showSkeleton);
-
-
     });
 
     // lights
@@ -223,13 +233,11 @@ function animate() {
 }
 
 function setBasicPosture() {
-    pianistModel.getObjectByName('mixamorigLeftUpLeg').rotation.x = -1.4;
-    pianistModel.getObjectByName('mixamorigRightUpLeg').rotation.x = -1.4;
-    pianistModel.getObjectByName('mixamorigRightLeg').rotation.x = 1.3;
-    pianistModel.getObjectByName('mixamorigLeftLeg').rotation.x = 1.4;
+    pianistModel.getObjectByName('mixamorigLeftUpLeg').rotation.x = -1.1;
+    pianistModel.getObjectByName('mixamorigRightUpLeg').rotation.x = -1.1;
+    pianistModel.getObjectByName('mixamorigRightLeg').rotation.x = 1.2;
+    pianistModel.getObjectByName('mixamorigLeftLeg').rotation.x = 1.2;
     pianistModel.getObjectByName('mixamorigSpine2').rotation.x = 0.4;
-    pianistModel.getObjectByName('mixamorigLeftLeg').rotation.x = 1.4;
-    pianistModel.getObjectByName('mixamorigRightFoot').rotation.x = -0.3;
     pianistModel.getObjectByName('mixamorigLeftHandThumb1').rotation.z = +0.4;
     pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
     pianistModel.getObjectByName('mixamorigRightArm').rotation.x = -0.5;
@@ -242,6 +250,8 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.y = -1.3;
     pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.z = -0.9;
     pianistModel.getObjectByName('mixamorigLeftHand').rotation.x = 0.3;
+    pianistModel.getObjectByName('mixamorigRightFoot').rotation.x = -0.5;
+    pianistModel.getObjectByName('mixamorigRightFoot').rotation.y = -0.2;
 
     mixamorig = {
         mixamorigRightArm: pianistModel.getObjectByName('mixamorigRightArm'),
@@ -287,15 +297,15 @@ function transitionHead() {
             if (futurAverage < 20)
                 headTarget = 0.7;
             else if (futurAverage < 30)
-                headTarget = -0.5;
-            else if (futurAverage < 40)
-                headTarget = -0.1;
-            else if (futurAverage < 50)
-                headTarget = 0.1;
-            else if (futurAverage < 70)
                 headTarget = 0.5;
+            else if (futurAverage < 40)
+                headTarget = 0.1;
+            else if (futurAverage < 50)
+                headTarget = -0.1;
+            else if (futurAverage < 70)
+                headTarget = -0.5;
             else
-                headTarget = 0.7;
+                headTarget = -0.7;
             headTargetTime = currentTime / 1000 + 0.5
             headStarty = mixamorig.mixamorigHead.rotation.y
         }
@@ -357,7 +367,7 @@ function setHandById(id, track) {
         return;
     const modificator = track == 0 ? 1 : -1;
     let helper = track == 0 ? rigHelper.right : rigHelper.left;
-    id = track == 0 ? (id - 88) * -1 : id + 2;
+    id = track == 0 ? (id - 88 + 1) * -1 : id + 1;
     const position = track == 0 ? "Right" : "Left";
     if (id > pianistPosition.length - 1)
         return;
@@ -382,7 +392,7 @@ function setHandById(id, track) {
 function render() {
     const t = clock.getElapsedTime();
 
-    if (currentTime / 1000> 3) 
+    if (currentTime / 1000 > 3)
         document.getElementById("info").style.visibility = "hidden"
     else
         document.getElementById("info").style.visibility = "visible"
@@ -417,6 +427,8 @@ function render() {
     }
     if (currentTime == 0 && lastBoxRefresh != currentTime) {
         lastBoxRefresh = currentTime;
+        headTarget = 0;
+        headTargetTime = 0;
         createFuturBox();
     }
     for (let [i, box] of futurBoxs.entries()) {
