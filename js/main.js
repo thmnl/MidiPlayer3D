@@ -435,7 +435,6 @@ function render() {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
         if (box.box.position.y < pianoFloor - box.box.scale.y / 2) {
-            console.log(box.box.scale.y)
             scene.remove(box.box);
             scene.remove(box.line);
             futurBoxs.splice(i, 1);
