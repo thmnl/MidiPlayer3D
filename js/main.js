@@ -250,8 +250,8 @@ function openPiano(init = false) {
         return;
     const t = clock.getElapsedTime();
     const r1 = (t - openPiano.start) / (openPiano.targetTime - openPiano.start);
-    const delay = 1;
-    const r2 = (t - (openPiano.start + delay)) / ((openPiano.targetTime + delay) - (openPiano.start + delay));
+    const delay = 1.5;
+    const r2 = (t - (openPiano.start + delay)) / ((openPiano.targetTime) - (openPiano.start + delay));
 
     if (r1 <= 1 && r1 >= 0) {
         pianoModel.getObjectByName('TopBoardRear_Low001').rotation.x = r1 * (0 - -0.63) + -0.63;
@@ -383,7 +383,6 @@ function transitionHands(track) {
     if (helper.average != average) {
         helper.startTime = currentTime / 1000
         helper.targetTime = (nextEvents[0].time - helper.startTime) > 0.8? helper.startTime + 0.8 : nextEvents[0].time;
-        console.log(helper.targetTime - helper.startTime)
         if (track == 0) {
             helper.mixamorigRightArm = { x: mixamorig.mixamorigRightArm.rotation.x, y: mixamorig.mixamorigRightArm.rotation.y, z: mixamorig.mixamorigRightArm.rotation.z }
             helper.mixamorigRightForeArm = { x: mixamorig.mixamorigRightForeArm.rotation.x, y: mixamorig.mixamorigRightForeArm.rotation.y, z: mixamorig.mixamorigRightForeArm.rotation.z }
