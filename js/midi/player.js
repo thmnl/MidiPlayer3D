@@ -241,7 +241,7 @@ var getLength = function() {
 	var length = data.length;
 	var totalTime = 0.5;
 	for (var n = 0; n < length; n++) {
-    totalTime += data[n][1];
+    	totalTime += data[n][1];
 	}
 
 	return totalTime;

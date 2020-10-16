@@ -99,6 +99,7 @@ function Replayer(midiFile, timeWarp, eventProcessor, bpm) {
 		if (midiEvent = getNextEvent()) {
 			while(midiEvent) processNext(true);
 		}
+		temporal[temporal.length - 1][1] = temporal[temporal.length - 1][1] + 2000
 	};
 	processEvents();
 	return {
