@@ -110,16 +110,23 @@ function init() {
     loader = new GLTFLoader();
 
     loader.setDRACOLoader(dracoLoader);
-    loader.load('../model/GrandPianoWK.glb', function (gltf) {
+    loader.load('../model/GrandPianoRecoloredWKM.glb', function (gltf) {
         document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
         pianoModel.position.set(1, -31 + pianoFloor, -53);
         pianoModel.scale.set(42.5, 42.5, 42.5);
         pianoModel.rotation.set(0, -1.570, 0);
         scene.add(pianoModel);
+
         let pianoFolder = panel.addFolder('Piano Model');
         pianoFolder.add(settings, 'Show piano model').onChange(showPiano);
+
         pianoModel.getObjectByName('Bench_Low001').position.y += 0.03;
+        pianoModel.getObjectByName('Fallboard_Low').rotation.z = -1.7;
+        pianoModel.getObjectByName('PropStickShort_Low').rotation.x = 0.95;
+        pianoModel.getObjectByName('TopBoardRear_Low001').rotation.x = -0.63;
+
+        openPiano(true);
 
     }, function (xhr) {
         document.getElementById("pianoLoading").innerHTML = "Grand Piano 3D Model loaded at " + (xhr.loaded / 16124588 * 100).toFixed(0) + "%"; //xhr.total is not working remotly
@@ -234,6 +241,29 @@ function animate() {
 
 }
 
+function openPiano(init = false) {
+    if (init) {
+        openPiano.start = clock.getElapsedTime() + 1;
+        openPiano.targetTime = openPiano.start + 4;
+    }
+    if (openPiano.start == undefined)
+        return;
+    const t = clock.getElapsedTime();
+    const r1 = (t - openPiano.start) / (openPiano.targetTime - openPiano.start);
+    const delay = 1;
+    const r2 = (t - (openPiano.start + delay)) / ((openPiano.targetTime + delay) - (openPiano.start + delay));
+
+    if (r1 <= 1 && r1 >= 0) {
+        pianoModel.getObjectByName('TopBoardRear_Low001').rotation.x = r1 * (0 - -0.63) + -0.63;
+        pianoModel.getObjectByName('Fallboard_Low').rotation.z = r1 * (0.1 - -1.7) + -1.7;
+    }
+    if (r2 <= 1 && r2 >= 0) {
+        pianoModel.getObjectByName('PropStickShort_Low').rotation.x = r2 * (0 - 0.95) + 0.95;
+    }
+
+}
+
+
 function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigLeftUpLeg').rotation.x = -1.1;
     pianistModel.getObjectByName('mixamorigRightUpLeg').rotation.x = -1.1;
@@ -242,16 +272,21 @@ function setBasicPosture() {
     pianistModel.getObjectByName('mixamorigSpine2').rotation.x = 0.4;
     pianistModel.getObjectByName('mixamorigLeftHandThumb1').rotation.z = +0.4;
     pianistModel.getObjectByName('mixamorigRightHandThumb1').rotation.z = -0.4;
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.x = -0.5;
-    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 1.5;
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 1.9;
-    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 0.9;
-    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = 0.3;
-    pianistModel.getObjectByName('mixamorigLeftArm').rotation.x = -0.5;
-    pianistModel.getObjectByName('mixamorigLeftArm').rotation.z = -1.5;
-    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.y = -1.3;
-    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.z = -0.9;
-    pianistModel.getObjectByName('mixamorigLeftHand').rotation.x = 0.3;
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.x = 0;
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.z = 0;
+    pianistModel.getObjectByName('mixamorigRightArm').rotation.y = 1.5;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.y = 2;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.z = 0.3;
+    pianistModel.getObjectByName('mixamorigRightForeArm').rotation.x = 0;
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.x = -1.2;
+    pianistModel.getObjectByName('mixamorigRightHand').rotation.z = 0.2;
+    pianistModel.getObjectByName('mixamorigLeftArm').rotation.x = 0;
+    pianistModel.getObjectByName('mixamorigLeftArm').rotation.z = 0;
+    pianistModel.getObjectByName('mixamorigLeftArm').rotation.y = -1.5;
+    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.y = -2;
+    pianistModel.getObjectByName('mixamorigLeftForeArm').rotation.z = 0;
+    pianistModel.getObjectByName('mixamorigLeftHand').rotation.z = -0.5;
+    pianistModel.getObjectByName('mixamorigLeftHand').rotation.x = -0.3;
     pianistModel.getObjectByName('mixamorigRightFoot').rotation.x = -0.5;
     pianistModel.getObjectByName('mixamorigRightFoot').rotation.y = -0.2;
 
@@ -347,16 +382,18 @@ function transitionHands(track) {
     average = Math.floor(average / nextEvents.length);
     if (helper.average != average) {
         helper.startTime = currentTime / 1000
-        helper.targetTime = nextEvents[0].time
+        helper.targetTime = (nextEvents[0].time - helper.startTime) > 0.8? helper.startTime + 0.8 : nextEvents[0].time;
+        console.log(helper.targetTime - helper.startTime)
         if (track == 0) {
-            helper.mixamorigRightArm = mixamorig.mixamorigRightArm.rotation
-            helper.mixamorigRightForeArm = mixamorig.mixamorigRightForeArm.rotation
-            helper.mixamorigRightHand = mixamorig.mixamorigRightHand.rotation
+            helper.mixamorigRightArm = { x: mixamorig.mixamorigRightArm.rotation.x, y: mixamorig.mixamorigRightArm.rotation.y, z: mixamorig.mixamorigRightArm.rotation.z }
+            helper.mixamorigRightForeArm = { x: mixamorig.mixamorigRightForeArm.rotation.x, y: mixamorig.mixamorigRightForeArm.rotation.y, z: mixamorig.mixamorigRightForeArm.rotation.z }
+            helper.mixamorigRightHand = { x: mixamorig.mixamorigRightHand.rotation.x, y: mixamorig.mixamorigRightHand.rotation.y, z: mixamorig.mixamorigRightHand.rotation.z }
+
         }
         else {
-            helper.mixamorigLeftArm = mixamorig.mixamorigLeftArm.rotation
-            helper.mixamorigLeftForeArm = mixamorig.mixamorigLeftForeArm.rotation
-            helper.mixamorigLeftHand = mixamorig.mixamorigLeftHand.rotation
+            helper.mixamorigLeftArm = { x: mixamorig.mixamorigLeftArm.rotation.x, y: mixamorig.mixamorigLeftArm.rotation.y, z: mixamorig.mixamorigLeftArm.rotation.z }
+            helper.mixamorigLeftForeArm = { x: mixamorig.mixamorigLeftForeArm.rotation.x, y: mixamorig.mixamorigLeftForeArm.rotation.y, z: mixamorig.mixamorigLeftForeArm.rotation.z }
+            helper.mixamorigLeftHand = { x: mixamorig.mixamorigLeftHand.rotation.x, y: mixamorig.mixamorigLeftHand.rotation.y, z: mixamorig.mixamorigLeftHand.rotation.z }
         }
         helper.average = average;
     }
@@ -451,6 +488,7 @@ function render() {
     transitionHands(0);
     transitionHands(1);
     transitionHead();
+    openPiano();
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     renderer.render(scene, camera);
 
@@ -545,7 +583,6 @@ let createGui = function () {
     playerFolder.add(settings, "Previous Song");
     playerFolder.add(settings, "Show notes").onChange(showNotes);
     playerFolder.add(settings, "Show Ground").onChange(showGround);
-
 
     const elements = document.getElementsByClassName("closed");
     for (let el of elements) {
