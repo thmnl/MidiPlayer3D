@@ -5,7 +5,7 @@ import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
-var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21;
+var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21, ground;
 var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
@@ -93,11 +93,12 @@ function init() {
 
     let groundMaterial = new THREE.MeshPhongMaterial({ map: groundTexture, transparent: true });
 
-    let mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(250, 250), groundMaterial);
-    mesh.rotation.x = - Math.PI / 2;
-    mesh.receiveShadow = true;
-    mesh.position.set(0, -10, -50);
-    scene.add(mesh);
+    ground = new THREE.Mesh(new THREE.PlaneBufferGeometry(250, 250), groundMaterial);
+    ground.rotation.x = - Math.PI / 2;
+    ground.receiveShadow = true;
+    ground.position.set(0, -10, -50);
+    ground.visible = false;
+    scene.add(ground);
     // piano Keyboard
 
     pianoKeys = generatePiano(scene);
@@ -157,6 +158,7 @@ function init() {
         skeleton = new THREE.SkeletonHelper(pianistModel);
         skeleton.visible = false;
         setBasicPosture();
+        skeleton.material.linewidth = 18;
         scene.add(skeleton);
         //panel 
         let pianistFolder = panel.addFolder('Pianist Model');
@@ -531,6 +533,7 @@ let createGui = function () {
         'Pause/Play': pausePlayStop,
         'Next Song': () => player.getNextSong(+1),
         'Previous Song': () => player.getNextSong(-1),
+        'Show Ground': false,
         'Show notes': true,
         'Show model': true,
         'Show skeleton': false,
@@ -540,12 +543,18 @@ let createGui = function () {
     playerFolder.add(settings, "Pause/Play");
     playerFolder.add(settings, "Next Song");
     playerFolder.add(settings, "Previous Song");
-    playerFolder.add(settings, 'Show notes').onChange(showNotes);
+    playerFolder.add(settings, "Show notes").onChange(showNotes);
+    playerFolder.add(settings, "Show Ground").onChange(showGround);
+
 
     const elements = document.getElementsByClassName("closed");
     for (let el of elements) {
         el.className = "open";
     }
+}
+
+let showGround = function (visible) {
+    ground.visible = visible;
 }
 
 let showNotes = function (visible) {
