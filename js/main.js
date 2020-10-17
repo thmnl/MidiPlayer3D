@@ -6,7 +6,7 @@ import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21, ground;
-var pianistModel, skeleton, pianoModel, panel, settings, light1, light2, light3, light4;
+var pianistModel, skeleton, pianoModel, panel, settings, lights = [];
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
 
@@ -178,11 +178,11 @@ function init() {
 
     let textureFlare0 = textureLoader.load('../images/lensflare0.png');
     let ambient = new THREE.AmbientLight(0xffffff, 0.5);
-    light1 = addLight(305.73, 100, 69.8);
-    light2 = addLight(205, 92, 59);
-    light3 = addLight(305.73, 100, 69.8);
-    light4 = addLight(205, 92, 59);
     scene.add(ambient);
+    lights[0] = addLight(305.73, 100, 69.8);
+    lights[1] = addLight(205, 92, 59);
+    lights[2] = addLight(305.73, 100, 69.8);
+    lights[3] = addLight(205, 92, 59);
 
     function addLight(h, s, l) {
 
@@ -435,21 +435,21 @@ function render() {
     else
         document.getElementById("info").style.visibility = "visible"
 
-    light1.position.x = Math.sin(t * 0.7) * 30;
-    light1.position.y = Math.cos(t * 0.5) * 40 + 30;
-    light1.position.z = Math.cos(t * 0.3) * 30;
+    lights[0].position.x = Math.sin(t * 0.7) * 30;
+    lights[0].position.y = Math.cos(t * 0.5) * 40 + 30;
+    lights[0].position.z = Math.cos(t * 0.3) * 30;
 
-    light2.position.x = Math.cos(t * 0.3) * 30;
-    light2.position.y = Math.sin(t * 0.5) * 40 + 30;
-    light2.position.z = Math.sin(t * 0.7) * 30;
+    lights[1].position.x = Math.cos(t * 0.3) * 30;
+    lights[1].position.y = Math.sin(t * 0.5) * 40 + 30;
+    lights[1].position.z = Math.sin(t * 0.7) * 30;
 
-    light3.position.x = Math.sin(t * 0.7) * 30;
-    light3.position.y = Math.cos(t * 0.3) * 40 + 30;
-    light3.position.z = Math.sin(t * 0.5) * 30;
+    lights[2].position.x = Math.sin(t * 0.7) * 30;
+    lights[2].position.y = Math.cos(t * 0.3) * 40 + 30;
+    lights[2].position.z = Math.sin(t * 0.5) * 30;
 
-    light4.position.x = Math.sin(t * 0.3) * 30;
-    light4.position.y = Math.cos(t * 0.7) * 40 + 30;
-    light4.position.z = Math.sin(t * 0.5) * 30;
+    lights[3].position.x = Math.sin(t * 0.3) * 30;
+    lights[3].position.y = Math.cos(t * 0.7) * 40 + 30;
+    lights[3].position.z = Math.sin(t * 0.5) * 30;
 
     if (player != undefined) {
         currentTime = player.currentTime;
@@ -472,6 +472,16 @@ function render() {
     for (let [i, box] of futurBoxs.entries()) {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
+        //TO DO : Fix long box
+        /*if (box.box.position.y < pianoFloor + box.box.scale.y / 2) {
+            let diff = (pianoFloor - box.box.position.y + box.box.scale.y / 2)
+            let diff2 = box.box.scale.y - (pianoFloor + box.box.scale.y / 2 - box.box.position.y)
+
+            //box.box.position.y += diff
+            //console.log(diff, box.box.scale.y)
+            //box.box.scale.y -= diff / 10
+            //box.line.scale.y = diff
+        }*/
         if (box.box.position.y < pianoFloor - box.box.scale.y / 2) {
             scene.remove(box.box);
             scene.remove(box.line);
