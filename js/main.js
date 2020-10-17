@@ -382,7 +382,7 @@ function transitionHands(track) {
     average = Math.floor(average / nextEvents.length);
     if (helper.average != average) {
         helper.startTime = currentTime / 1000
-        helper.targetTime = (nextEvents[0].time - helper.startTime) > 0.8? helper.startTime + 0.8 : nextEvents[0].time;
+        helper.targetTime = (nextEvents[0].time - helper.startTime) > 0.8 ? helper.startTime + 0.8 : nextEvents[0].time;
         if (track == 0) {
             helper.mixamorigRightArm = { x: mixamorig.mixamorigRightArm.rotation.x, y: mixamorig.mixamorigRightArm.rotation.y, z: mixamorig.mixamorigRightArm.rotation.z }
             helper.mixamorigRightForeArm = { x: mixamorig.mixamorigRightForeArm.rotation.x, y: mixamorig.mixamorigRightForeArm.rotation.y, z: mixamorig.mixamorigRightForeArm.rotation.z }
@@ -472,16 +472,14 @@ function render() {
     for (let [i, box] of futurBoxs.entries()) {
         box.box.position.y = box.baseY - currentTime / 100;
         box.line.position.y = box.baseY - currentTime / 100;
-        //TO DO : Fix long box
-        /*if (box.box.position.y < pianoFloor + box.box.scale.y / 2) {
-            let diff = (pianoFloor - box.box.position.y + box.box.scale.y / 2)
-            let diff2 = box.box.scale.y - (pianoFloor + box.box.scale.y / 2 - box.box.position.y)
-
-            //box.box.position.y += diff
-            //console.log(diff, box.box.scale.y)
-            //box.box.scale.y -= diff / 10
-            //box.line.scale.y = diff
-        }*/
+        if (box.box.position.y < pianoFloor + box.box.scale.y / 2) {
+            let positionDiff = (pianoFloor - box.box.position.y + box.box.scale.y / 2)
+            let scaleDiff = box.velocity - (pianoFloor + box.velocity / 2 - box.box.position.y)
+            box.box.position.y += positionDiff
+            box.line.position.y += positionDiff
+            box.box.scale.y = scaleDiff
+            box.line.scale.y = scaleDiff
+        }
         if (box.box.position.y < pianoFloor - box.box.scale.y / 2) {
             scene.remove(box.box);
             scene.remove(box.line);
@@ -553,7 +551,7 @@ let createFuturBox = function (clearBox = true) {
         if (data.msg.subtype == "noteOn") {
             if (futurBoxs.length > 350)
                 return;
-            if (data.time < currentTime / 1000 || data.drawn)
+            if (data.time < player.currentTime / 1000 - 0.05 || data.drawn)
                 continue;
             let n = data.msg.noteNumber - 21;
             let width;
@@ -694,6 +692,7 @@ let pausePlayStop = function (stop) {
         MIDI.Player.stop();
     } else if (MIDI.Player.playing) {
         MIDI.Player.pause(true);
+        createFuturBox(true);
     } else {
         MIDI.Player.resume();
     }
