@@ -113,7 +113,7 @@ function init() {
     loader.load('../model/GrandPianoRecoloredWKM.glb', function (gltf) {
         document.getElementById("pianoLoading").innerHTML = "";
         pianoModel = gltf.scene;
-        pianoModel.position.set(1, -31 + pianoFloor, -53);
+        pianoModel.position.set(1, -30.8 + pianoFloor, -53);
         pianoModel.scale.set(42.5, 42.5, 42.5);
         pianoModel.rotation.set(0, -1.570, 0);
         scene.add(pianoModel);
@@ -374,7 +374,7 @@ function transitionHands(track) {
         const timeReference = futurEvents[0].time
         nextEvents = futurEvents.filter(data => data.time == timeReference)
     }
-    if (nextEvents.length <= 0)
+    if (nextEvents.length <= 0 || nextEvents[0].time > currentTime / 1000 + 0.3)
         return;
     for (let i = 0; i < nextEvents.length; i++) {
         average += nextEvents[i].msg.noteNumber - 21
@@ -382,7 +382,7 @@ function transitionHands(track) {
     average = Math.floor(average / nextEvents.length);
     if (helper.average != average) {
         helper.startTime = currentTime / 1000
-        helper.targetTime = (nextEvents[0].time - helper.startTime) > 0.8 ? helper.startTime + 0.8 : nextEvents[0].time;
+        helper.targetTime = nextEvents[0].time;
         if (track == 0) {
             helper.mixamorigRightArm = { x: mixamorig.mixamorigRightArm.rotation.x, y: mixamorig.mixamorigRightArm.rotation.y, z: mixamorig.mixamorigRightArm.rotation.z }
             helper.mixamorigRightForeArm = { x: mixamorig.mixamorigRightForeArm.rotation.x, y: mixamorig.mixamorigRightForeArm.rotation.y, z: mixamorig.mixamorigRightForeArm.rotation.z }
