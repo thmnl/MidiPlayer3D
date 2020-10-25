@@ -4,11 +4,13 @@ import { GUI } from './three/dat.gui.module.js';
 import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
+import { animateFingers } from './fingers.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21, ground;
 var pianistModel, skeleton, pianoModel, panel, settings, lights = [];
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
+var notesState = [new Array(88), new Array(88)];
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -164,7 +166,7 @@ function init() {
 
         skeleton = new THREE.SkeletonHelper(pianistModel);
         skeleton.visible = false;
-        setBasicPosture();
+        rigInit();
         skeleton.material.linewidth = 18;
         scene.add(skeleton);
         //panel 
@@ -264,7 +266,7 @@ function openPiano(init = false) {
 }
 
 
-function setBasicPosture() {
+function rigInit() {
     pianistModel.getObjectByName('mixamorigLeftUpLeg').rotation.x = -1.1;
     pianistModel.getObjectByName('mixamorigRightUpLeg').rotation.x = -1.1;
     pianistModel.getObjectByName('mixamorigRightLeg').rotation.x = 1.2;
@@ -298,6 +300,16 @@ function setBasicPosture() {
         mixamorigLeftForeArm: pianistModel.getObjectByName('mixamorigLeftForeArm'),
         mixamorigLeftHand: pianistModel.getObjectByName('mixamorigLeftHand'),
         mixamorigHead: pianistModel.getObjectByName('mixamorigHead'),
+        mixamorigRightHandThumb: pianistModel.getObjectByName('mixamorigRightHandThumb1'),
+        mixamorigRightHandIndex: pianistModel.getObjectByName('mixamorigRightHandIndex1'),
+        mixamorigRightHandMiddle: pianistModel.getObjectByName('mixamorigRightHandMiddle1'),
+        mixamorigRightHandRing: pianistModel.getObjectByName('mixamorigRightHandRing1'),
+        mixamorigRightHandPinky: pianistModel.getObjectByName('mixamorigRightHandPinky1'),
+        mixamorigLeftHandThumb: pianistModel.getObjectByName('mixamorigLeftHandThumb1'),
+        mixamorigLeftHandIndex: pianistModel.getObjectByName('mixamorigLeftHandIndex1'),
+        mixamorigLeftHandMiddle: pianistModel.getObjectByName('mixamorigLeftHandMiddle1'),
+        mixamorigLeftHandRing: pianistModel.getObjectByName('mixamorigLeftHandRing1'),
+        mixamorigLeftHandPinky: pianistModel.getObjectByName('mixamorigLeftHandPinky1'),
     }
     rigHelper = {
         mixamorigRightArm: { x: 0, y: 0, z: 0 },
@@ -707,7 +719,9 @@ document.addEventListener('keydown', function (event) {
 });
 
 // set keyOn of keyOff 
-let setKey = function (pianoKey, keyOn) {
+let setKey = function (pianoKey, keyOn, track) {
+    if (track != undefined)
+        notesState[track % 2][pianoKey] = keyOn
     if ((keyOn && pianoKeys[pianoKey].isOn) || (!keyOn && !pianoKeys[pianoKey].isOn))
         return
     let modifier = keyOn ? 1 : -1;
@@ -743,11 +757,12 @@ eventjs.add(window, "load", function (event) {
             player.addListener(function (data) {
                 let pianoKey = data.note - 21;
                 if (data.message === 144) {
-                    setKey(pianoKey, true);
+                    setKey(pianoKey, true, data.track);
                 }
                 else {
-                    setKey(pianoKey, false);
+                    setKey(pianoKey, false, data.track);
                 }
+                animateFingers(notesState, rigHelper, mixamorig);
             });
 
             ///
