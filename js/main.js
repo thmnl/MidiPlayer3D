@@ -4,13 +4,16 @@ import { GUI } from './three/dat.gui.module.js';
 import { GLTFLoader } from './three/loaders/GLTFLoader.js';
 import { DRACOLoader } from './three/loaders/DRACOLoader.js';
 import { Lensflare, LensflareElement } from './three/Lensflare.js';
-import { animateFingers } from './fingers.js';
+import { animateFingers } from './util/fingers.js';
 
 var camera, controls, scene, renderer, pianoKeys, player, futurBoxs = [], pianoFloor = 21, ground;
 var pianistModel, skeleton, pianoModel, panel, settings, lights = [];
 var t1 = Date.now(), previouscurrentTime = -1, currentTime = 0, clock = new THREE.Clock();
 var mixamorig, rigHelper, headTarget = 0, futurAverage, headTargetTime, headStarty, lastBoxRefresh = 0;
 var notesState = [new Array(88), new Array(88)];
+
+document.getElementById("body").addEventListener("drop", dropHandler);
+document.getElementById("body").addEventListener("dragover", dragOverHandler);
 
 // generate a piano and add it to scene if scene is specified
 function generatePiano(scene = undefined, opacity = 1) {
@@ -173,6 +176,8 @@ function init() {
         let pianistFolder = panel.addFolder('Pianist Model');
         pianistFolder.add(settings, 'Show model').onChange(showPianist);
         pianistFolder.add(settings, 'Show skeleton').onChange(showSkeleton);
+        pianistFolder.add(settings, 'Animate Fingers');
+
     });
 
     // lights
@@ -262,7 +267,6 @@ function openPiano(init = false) {
     if (r2 <= 1 && r2 >= 0) {
         pianoModel.getObjectByName('PropStickShort_Low').rotation.x = r2 * (0 - 0.95) + 0.95;
     }
-
 }
 
 
@@ -300,17 +304,13 @@ function rigInit() {
         mixamorigLeftForeArm: pianistModel.getObjectByName('mixamorigLeftForeArm'),
         mixamorigLeftHand: pianistModel.getObjectByName('mixamorigLeftHand'),
         mixamorigHead: pianistModel.getObjectByName('mixamorigHead'),
-        mixamorigRightHandThumb: pianistModel.getObjectByName('mixamorigRightHandThumb1'),
-        mixamorigRightHandIndex: pianistModel.getObjectByName('mixamorigRightHandIndex1'),
-        mixamorigRightHandMiddle: pianistModel.getObjectByName('mixamorigRightHandMiddle1'),
-        mixamorigRightHandRing: pianistModel.getObjectByName('mixamorigRightHandRing1'),
-        mixamorigRightHandPinky: pianistModel.getObjectByName('mixamorigRightHandPinky1'),
-        mixamorigLeftHandThumb: pianistModel.getObjectByName('mixamorigLeftHandThumb1'),
-        mixamorigLeftHandIndex: pianistModel.getObjectByName('mixamorigLeftHandIndex1'),
-        mixamorigLeftHandMiddle: pianistModel.getObjectByName('mixamorigLeftHandMiddle1'),
-        mixamorigLeftHandRing: pianistModel.getObjectByName('mixamorigLeftHandRing1'),
-        mixamorigLeftHandPinky: pianistModel.getObjectByName('mixamorigLeftHandPinky1'),
+        mixamorigHandThumb: [pianistModel.getObjectByName('mixamorigRightHandThumb1'), pianistModel.getObjectByName('mixamorigLeftHandThumb1')],
+        mixamorigHandIndex: [pianistModel.getObjectByName('mixamorigRightHandIndex1'), pianistModel.getObjectByName('mixamorigLeftHandIndex1')],
+        mixamorigHandMiddle: [pianistModel.getObjectByName('mixamorigRightHandMiddle1'), pianistModel.getObjectByName('mixamorigLeftHandMiddle1')],
+        mixamorigHandRing: [pianistModel.getObjectByName('mixamorigRightHandRing1'), pianistModel.getObjectByName('mixamorigLeftHandRing1')],
+        mixamorigHandPinky: [pianistModel.getObjectByName('mixamorigRightHandPinky1'), pianistModel.getObjectByName('mixamorigLeftHandPinky1')]
     }
+
     rigHelper = {
         mixamorigRightArm: { x: 0, y: 0, z: 0 },
         mixamorigRightForeArm: { x: 0, y: 0, z: 0 },
@@ -339,10 +339,10 @@ function rigInit() {
 }
 
 function transitionHead() {
-    if (mixamorig == undefined)
+    if (mixamorig == undefined || currentTime / 1000 < 1.5)
         return;
     if (headTarget == mixamorig.mixamorigHead.rotation.y || headTargetTime < currentTime / 1000) {
-        if (Math.floor(Math.random() * 50) == 0 && MIDI.Player.playing) {
+        if (Math.floor(Math.random() * 10) == 0 && MIDI.Player.playing) {
             if (futurAverage < 20)
                 headTarget = 0.7;
             else if (futurAverage < 30)
@@ -384,7 +384,7 @@ function transitionHands(track) {
 
     if (futurEvents.length > 0) {
         const timeReference = futurEvents[0].time
-        nextEvents = futurEvents.filter(data => data.time == timeReference)
+        nextEvents = futurEvents.filter(data => data.time >= timeReference && data.time <= timeReference + 0.3)
     }
     if (nextEvents.length <= 0 || nextEvents[0].time > currentTime / 1000 + 0.3)
         return;
@@ -594,6 +594,7 @@ let createGui = function () {
         'Show notes': true,
         'Show model': true,
         'Show skeleton': false,
+        'Animate Fingers': true,
         'Show piano model': true,
     }
     playerFolder.add(settings, "Volume", 0, 100, 1).onChange(SetVolume);
@@ -710,8 +711,6 @@ let pausePlayStop = function (stop) {
     }
 }
 
-document.getElementById("body").addEventListener("drop", dropHandler);
-document.getElementById("body").addEventListener("dragover", dragOverHandler);
 document.addEventListener('keydown', function (event) {
     if (event.code == "Space") {
         pausePlayStop();
@@ -762,7 +761,8 @@ eventjs.add(window, "load", function (event) {
                 else {
                     setKey(pianoKey, false, data.track);
                 }
-                animateFingers(notesState, rigHelper, mixamorig);
+                if (data.track != undefined)
+                    animateFingers(notesState, rigHelper, mixamorig, data.track % 2, settings["Animate Fingers"]);
             });
 
             ///
