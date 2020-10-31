@@ -69,7 +69,7 @@ function animateFingers(notesState, rigHelper, mixamorig, track, animate) {
         hand.right1.rotation.z = 0.3 * modificator;
     }
     if (rangeCheck(notesState[track], average + 3, average + 5)) {
-        if (track) {
+        if (!track) {
             hand.right2.rotation.z += 0.1 * modificator;
             hand.right2.rotation.y = -0.5 * modificator;
         }
@@ -78,7 +78,7 @@ function animateFingers(notesState, rigHelper, mixamorig, track, animate) {
         }
     }
     if (rangeCheck(notesState[track], average + 5, average + 8)) {
-        if (track) {
+        if (!track) {
             hand.right2.rotation.z += 0.1 * modificator;
             hand.right2.rotation.y = -0.8 * modificator;
         }
