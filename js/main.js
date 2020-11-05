@@ -250,6 +250,7 @@ function animate() {
 
 function openPiano(init = false) {
     if (init) {
+        console.log(clock.getElapsedTime());
         openPiano.start = clock.getElapsedTime() + 1;
         openPiano.targetTime = openPiano.start + 4;
     }
@@ -266,6 +267,12 @@ function openPiano(init = false) {
     }
     if (r2 <= 1 && r2 >= 0) {
         pianoModel.getObjectByName('PropStickShort_Low').rotation.x = r2 * (0 - 0.95) + 0.95;
+    }
+    // fix error when the user switch tab during the loading
+    if (t > openPiano.start + 4) { 
+        pianoModel.getObjectByName('TopBoardRear_Low001').rotation.x = 0;
+        pianoModel.getObjectByName('Fallboard_Low').rotation.z = 0.1;
+        pianoModel.getObjectByName('PropStickShort_Low').rotation.x = 0;
     }
 }
 
