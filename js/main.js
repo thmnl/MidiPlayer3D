@@ -250,7 +250,6 @@ function animate() {
 
 function openPiano(init = false) {
     if (init) {
-        console.log(clock.getElapsedTime());
         openPiano.start = clock.getElapsedTime() + 1;
         openPiano.targetTime = openPiano.start + 4;
     }
@@ -598,6 +597,7 @@ let createGui = function () {
         'Next Song': () => player.getNextSong(+1),
         'Previous Song': () => player.getNextSong(-1),
         'Show Ground': false,
+        'Open Midi File': openMidiFile,
         'Show notes': true,
         'Show model': true,
         'Show skeleton': false,
@@ -610,11 +610,40 @@ let createGui = function () {
     playerFolder.add(settings, "Previous Song");
     playerFolder.add(settings, "Show notes").onChange(showNotes);
     playerFolder.add(settings, "Show Ground").onChange(showGround);
-
+    playerFolder.add(settings, "Open Midi File");
     const elements = document.getElementsByClassName("closed");
     for (let el of elements) {
         el.className = "open";
     }
+}
+
+let openMidiFile = function() {
+    let input = document.createElement('input');
+    input.type = 'file';
+
+    input.onchange = e => { 
+        let place;
+        let file = e.target.files[0]; 
+        let reader = new FileReader();
+        let name = file.name.replace(".mid", " ");
+        name = name.replace(/_/g, " ");
+        reader.onload = function (event) {
+            if (event.target.result.startsWith("data:audio/mid;base64")) {
+                if (songid % songname.length != songname.length - 1) {
+                    place = (songid + 1) % songname.length;
+                }
+                else {
+                    place = songname.length;
+                }
+                songid = songid % songname.length;
+                songname.splice(place, 0, name);
+                song.splice(place, 0, event.target.result);
+                player.getNextSong(+1);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    input.click();
 }
 
 let showGround = function (visible) {
@@ -686,9 +715,9 @@ function dropHandler(ev) {
     ev.preventDefault();
 
     let place;
-    let file = ev.dataTransfer.files[0],
-        reader = new FileReader();
-    name = file.name.replace(".mid", " ");
+    let file = ev.dataTransfer.files[0]
+    let reader = new FileReader();
+    let name = file.name.replace(".mid", " ");
     name = name.replace(/_/g, " ");
     reader.onload = function (event) {
         if (event.target.result.startsWith("data:audio/mid;base64")) {
