@@ -632,7 +632,7 @@ let openMidiFile = function() {
         let name = file.name.replace(".mid", " ");
         name = name.replace(/_/g, " ");
         reader.onload = function (event) {
-            if (event.target.result.startsWith("data:audio/mid;base64")) {
+            if (event.target.result.startsWith("data:audio/mid;base64") || event.target.result.startsWith("data:audio/midi;base64")) {
                 if (songid % songname.length != songname.length - 1) {
                     place = (songid + 1) % songname.length;
                 }
@@ -724,7 +724,7 @@ function dropHandler(ev) {
     let name = file.name.replace(".mid", " ");
     name = name.replace(/_/g, " ");
     reader.onload = function (event) {
-        if (event.target.result.startsWith("data:audio/mid;base64")) {
+        if (event.target.result.startsWith("data:audio/mid;base64") || event.target.result.startsWith("data:audio/midi;base64")) {
             if (songid % songname.length != songname.length - 1) {
                 place = (songid + 1) % songname.length;
             }
